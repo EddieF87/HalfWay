@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">HalfWay</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_main2">MainActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_maps">Map</string>
+
+
+    <string name="home_title">HOME</string>
+</resources>
