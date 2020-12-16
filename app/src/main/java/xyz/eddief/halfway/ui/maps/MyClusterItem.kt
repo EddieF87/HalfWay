@@ -6,8 +6,8 @@ import com.google.maps.android.clustering.ClusterItem
 class MyClusterItem(
     lat: Double,
     lng: Double,
-    private val title: String,
-    private val snippet: String
+    private val title: String = "",
+    private val snippet: String = ""
 ) : ClusterItem {
 
     private val position: LatLng = LatLng(lat, lng)

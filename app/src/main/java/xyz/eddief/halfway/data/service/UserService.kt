@@ -11,7 +11,7 @@ class UserService(networkService: NetworkService) {
     private val mapsService: MapsService = networkService.mapsService
 
     suspend fun getNearbyPlaces(location: String, radius: String): NearbyPlacesResult? =
-        mapsService.getNearbyPlaces(location, radius, MAPS_API_KEY).await()
+        mapsService.getNearbyPlaces(location, "distance", "restaurant", MAPS_API_KEY, true.toString()).await()
 
     suspend fun getGeocode(latLng: String): GeoCode? =
         mapsService.getGeocode(latLng, MAPS_API_KEY).await()

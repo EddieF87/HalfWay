@@ -21,11 +21,13 @@ interface MapsService {
     @GET("$API_URL/geocode/json")
     fun getGeocode(@Query("latlng") latLng: String, @Query("key") key: String): Call<GeoCode?>
 
-    @GET("$API_URL/place/search/json")
+    @GET("$API_URL/place/nearbysearch/json")
     fun getNearbyPlaces(
         @Query("location") location: String,
-        @Query("radius") radius: String,
-        @Query("key") key: String
+        @Query("rankby") radius: String,
+        @Query("type") type: String,
+        @Query("key") key: String,
+        @Query("open_now") openNow: String
     ): Call<NearbyPlacesResult?>
 
     companion object {
