@@ -1,11 +1,10 @@
 package xyz.eddief.halfway.ui.home
 
-import android.app.Application
 import android.location.Location
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.hilt.Assisted
+import androidx.hilt.lifecycle.ViewModelInject
+import androidx.lifecycle.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.libraries.places.api.model.Place
@@ -18,15 +17,13 @@ import xyz.eddief.halfway.data.models.LocationObject
 import xyz.eddief.halfway.data.models.MapData
 import xyz.eddief.halfway.data.models.NearbyPlacesResult
 import xyz.eddief.halfway.data.models.SingleEvent
-import xyz.eddief.halfway.ui.HalfWayViewModel
+import xyz.eddief.halfway.data.service.UserService
 import xyz.eddief.halfway.utils.DEBUG_TAG
 
-
-class HomeViewModel(application: Application) : HalfWayViewModel(application) {
-
-    private val _nearbyPlaces = MutableLiveData<SingleEvent<NearbyPlacesResult>>()
-    val nearbyPlaces: LiveData<SingleEvent<NearbyPlacesResult>>
-        get() = _nearbyPlaces
+class HomeViewModel @ViewModelInject constructor(
+    private val userService: UserService,
+    @Assisted private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
     private val _mapData = MutableLiveData<SingleEvent<MapData>>()
     val mapData: LiveData<SingleEvent<MapData>>
@@ -46,8 +43,15 @@ class HomeViewModel(application: Application) : HalfWayViewModel(application) {
 
         center = latLngBounds.center
 
-        val distanceBetween = Location.distanceBetween(location1.location.latitude, location1.location.longitude, location2.location.latitude, location2.location.longitude, FloatArray(4))
-        Log.d(DEBUG_TAG, "distance = $distanceBetween")
+        val arr = FloatArray(1)
+        Location.distanceBetween(
+            location1.location.latitude,
+            location1.location.longitude,
+            location2.location.latitude,
+            location2.location.longitude,
+            arr
+        )
+        Log.d(DEBUG_TAG, "distance = ${arr[0]}")
         fetchNearbyPlaces(center)
     }
 
@@ -56,9 +60,11 @@ class HomeViewModel(application: Application) : HalfWayViewModel(application) {
             try {
                 _mapData.value = SingleEvent(
                     MapData(
-                        listOf(location1, location2,
-                            location3 ,
-                            LocationObject("CENTER", center)),
+                        listOf(
+                            location1, location2,
+                            location3,
+                            LocationObject("CENTER", center)
+                        ),
                         nearbyPlacesResult = getNearbyPlaces(center)
                     )
                 )
@@ -70,15 +76,14 @@ class HomeViewModel(application: Application) : HalfWayViewModel(application) {
 
     private suspend fun getNearbyPlaces(location: LatLng): NearbyPlacesResult =
         withContext(Dispatchers.IO) {
-            val i =
-                app.userService.getNearbyPlaces(
-                    "${location.latitude}, ${location.longitude}",
-                    TestUtils.TEST_RADIUS
-                )!!
+            val i = userService.getNearbyPlaces(
+                "${location.latitude}, ${location.longitude}",
+                TestUtils.TEST_RADIUS
+            )!!
             i.results.forEach {
                 Log.d(DEBUG_TAG, "${it.name}   ${it.types}  ${it.opening_hours?.open_now}")
             }
-            return@withContext i
+            i
         }
 
     fun fetchPlace(placeId: String) {

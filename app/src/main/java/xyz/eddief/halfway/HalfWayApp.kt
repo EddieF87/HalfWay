@@ -1,11 +1,9 @@
 package xyz.eddief.halfway
 
 import android.app.Application
-import xyz.eddief.halfway.data.service.NetworkService
-import xyz.eddief.halfway.data.service.UserService
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class HalfWayApp : Application() {
 
-    val networkService by lazy { NetworkService(this) }
-    val userService by lazy { UserService(networkService) }
 }

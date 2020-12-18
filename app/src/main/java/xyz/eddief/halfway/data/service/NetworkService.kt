@@ -10,9 +10,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 import xyz.eddief.halfway.utils.DEBUG_TAG
 import xyz.eddief.halfway.utils.SignatureManager
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-
-class NetworkService(application: Application) {
+@Singleton
+class NetworkService @Inject constructor(application: Application) {
 
     private val builder: OkHttpClient.Builder = OkHttpClient().newBuilder().also {
         val signature =
@@ -39,5 +41,4 @@ class NetworkService(application: Application) {
         .build()
 
     var mapsService: MapsService = retrofit.create(MapsService::class.java)
-
 }
