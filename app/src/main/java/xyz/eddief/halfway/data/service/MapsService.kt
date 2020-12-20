@@ -10,7 +10,7 @@ import xyz.eddief.halfway.data.models.NearbyPlacesResult
 
 interface MapsService {
 
-    @GET("$API_URL/distancematrix/json")
+    @GET("distancematrix/json")
     fun getDistance(
         @Query("units") units: String,
         @Query("origins") origins: String,
@@ -18,10 +18,10 @@ interface MapsService {
         @Query("key") key: String
     ): Call<DistanceResult?>
 
-    @GET("$API_URL/geocode/json")
+    @GET("geocode/json")
     fun getGeocode(@Query("latlng") latLng: String, @Query("key") key: String): Call<GeoCode?>
 
-    @GET("$API_URL/place/nearbysearch/json")
+    @GET("place/nearbysearch/json")
     fun getNearbyPlaces(
         @Query("location") location: String,
         @Query("rankby") radius: String,
@@ -30,7 +30,4 @@ interface MapsService {
         @Query("open_now") openNow: String
     ): Call<NearbyPlacesResult?>
 
-    companion object {
-        const val API_URL = "https://maps.googleapis.com/maps/api"
-    }
 }

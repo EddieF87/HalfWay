@@ -5,10 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.fragment_home.*
 import xyz.eddief.halfway.R
 import xyz.eddief.halfway.data.models.MapData
 
@@ -26,9 +29,9 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        homeViewModel.mapData.observe(viewLifecycleOwner, {
-            it.get()?.let { places ->
-                mapNearbyPlaces(places)
+        homeViewModel.homeDataState.observe(viewLifecycleOwner, {
+            it.get()?.let { state ->
+                syncMapDataState(state)
             }
         })
 
@@ -36,8 +39,31 @@ class HomeFragment : Fragment() {
         textView.setOnClickListener { homeViewModel.coordinate() }
     }
 
+    private fun syncMapDataState(homeDataState: HomeDataState) {
+        when(homeDataState) {
+            is HomeDataState.Ready -> {
+                displayLoading(false)
+                mapNearbyPlaces(homeDataState.mapData)
+            }
+            is HomeDataState.Error -> {
+                displayLoading(false)
+                displayError(homeDataState.error)
+            }
+            HomeDataState.Loading -> displayLoading(true)
+        }
+    }
+
     private fun mapNearbyPlaces(mapData: MapData) {
         val action = HomeFragmentDirections.actionNavigationHomeToNavigationMaps(mapData)
         findNavController().navigate(action)
+    }
+
+    private fun displayError(error: String?) {
+        Snackbar.make(requireView(), "Error: $error", Snackbar.LENGTH_LONG).show()
+    }
+
+    private fun displayLoading(inProgress: Boolean) {
+        homeLoader.isVisible = inProgress
+        text_home.isVisible = !inProgress
     }
 }

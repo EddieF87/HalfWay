@@ -24,9 +24,13 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "MAPS_API_KEY", secureProperties['MAPS_API_KEY'])
+        resValue "string", "maps_api_key", secureProperties['MAPS_API_KEY']
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

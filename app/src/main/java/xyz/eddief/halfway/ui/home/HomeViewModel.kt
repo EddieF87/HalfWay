@@ -1,7 +1,6 @@
 package xyz.eddief.halfway.ui.home
 
 import android.location.Location
-import android.util.Log
 import androidx.hilt.Assisted
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.*
@@ -17,17 +16,19 @@ import xyz.eddief.halfway.data.models.LocationObject
 import xyz.eddief.halfway.data.models.MapData
 import xyz.eddief.halfway.data.models.NearbyPlacesResult
 import xyz.eddief.halfway.data.models.SingleEvent
-import xyz.eddief.halfway.data.service.UserService
-import xyz.eddief.halfway.utils.DEBUG_TAG
+import xyz.eddief.halfway.data.repository.MapsRepository
+import xyz.eddief.halfway.utils.dLog
 
 class HomeViewModel @ViewModelInject constructor(
-    private val userService: UserService,
+    private val mapsRepository: MapsRepository,
     @Assisted private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _mapData = MutableLiveData<SingleEvent<MapData>>()
-    val mapData: LiveData<SingleEvent<MapData>>
-        get() = _mapData
+
+
+    private val _homeDataState = MutableLiveData<SingleEvent<HomeDataState>>()
+    val homeDataState: LiveData<SingleEvent<HomeDataState>>
+        get() = _homeDataState
 
     private val location1 = TestUtils.TEST_LOC_1
     private val location2 = TestUtils.TEST_LOC_2
@@ -51,39 +52,41 @@ class HomeViewModel @ViewModelInject constructor(
             location2.location.longitude,
             arr
         )
-        Log.d(DEBUG_TAG, "distance = ${arr[0]}")
         fetchNearbyPlaces(center)
     }
 
     private fun fetchNearbyPlaces(center: LatLng) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
-                _mapData.value = SingleEvent(
-                    MapData(
-                        listOf(
-                            location1, location2,
-                            location3,
-                            LocationObject("CENTER", center)
-                        ),
-                        nearbyPlacesResult = getNearbyPlaces(center)
+                _homeDataState.value = SingleEvent(HomeDataState.Loading)
+                _homeDataState.value = SingleEvent(
+                    HomeDataState.Ready(
+                        MapData(
+                            listOf(
+                                location1, location2, location3,
+                                LocationObject("CENTER", center)
+                            ),
+                            nearbyPlacesResult = getNearbyPlaces(center)
+                        )
                     )
                 )
             } catch (e: Exception) {
-                Log.d(DEBUG_TAG, "Exception = $e")
+                dLog("Exception = $e")
+                _homeDataState.value = SingleEvent(HomeDataState.Error(e.message))
             }
         }
     }
 
     private suspend fun getNearbyPlaces(location: LatLng): NearbyPlacesResult =
         withContext(Dispatchers.IO) {
-            val i = userService.getNearbyPlaces(
+            val response = mapsRepository.getNearbyPlaces(
                 "${location.latitude}, ${location.longitude}",
                 TestUtils.TEST_RADIUS
             )!!
-            i.results.forEach {
-                Log.d(DEBUG_TAG, "${it.name}   ${it.types}  ${it.opening_hours?.open_now}")
+            response.results.forEach {
+                dLog("place = ${it.name}   ${it.types}  ${it.opening_hours?.open_now}")
             }
-            i
+            response
         }
 
     fun fetchPlace(placeId: String) {
