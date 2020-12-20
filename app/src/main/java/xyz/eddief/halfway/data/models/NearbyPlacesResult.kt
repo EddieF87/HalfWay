@@ -1,8 +1,6 @@
 package xyz.eddief.halfway.data.models
 
 import android.os.Parcelable
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.model.OpeningHours
 import kotlinx.android.parcel.Parcelize
 
 
@@ -17,14 +15,14 @@ data class NearbyPlacesResult(
     @Parcelize
     data class Result(
         val geometry: Geometry,
-        val icon: String,
-        val id: String,
-        val place_id: String,
-        val name: String,
+        val icon: String?,
+        val id: String?,
+        val place_id: String?,
+        val name: String?,
         val opening_hours: OpeningHours?,
-        val reference: String,
-        val types: List<String>,
-        val vicinity: String
+        val reference: String?,
+        val types: List<String>?,
+        val vicinity: String?
     ) : Parcelable
 
 

@@ -11,8 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.navArgs
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
@@ -27,21 +27,22 @@ import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.clustering.ClusterManager
 import kotlinx.android.synthetic.main.fragment_maps.*
 import xyz.eddief.halfway.R
+import xyz.eddief.halfway.data.models.MapData
 
 
 class MapsFragment : Fragment() {
 
-    private val args: MapsFragmentArgs by navArgs()
-
+    private val argsMapData: MapData get() = arguments?.getParcelable(MAP_DATA_KEY)!!
     private var googleMap: GoogleMap? = null
 
     private val callback = OnMapReadyCallback { googleMap ->
         this.googleMap = googleMap
 
-        val nearbyPlaces = args.mapData.nearbyPlacesResult.results.map {
+        val nearbyPlaces = argsMapData.nearbyPlacesResult.results.map {
             Pair(it.geometry.location, it.name)
         }
-        val myLocations = args.mapData.locations
+        val myLocations = argsMapData.locations
+        val centerLocation = argsMapData.centerLocation
 
         if (nearbyPlaces.isNullOrEmpty()) {
             this.view?.let {
@@ -50,8 +51,6 @@ class MapsFragment : Fragment() {
         }
 
         googleMap.apply {
-            setPadding(0, 0, 0, 180)
-
             val clusterManager = ClusterManager<ClusterItem>(requireContext(), this)
 
             clusterManager.apply {
@@ -89,14 +88,27 @@ class MapsFragment : Fragment() {
                     false
                 }
 
-                addItems(nearbyPlaces?.map { MyClusterItem(it.first.lat, it.first.lng, it.second) })
+                addItems(nearbyPlaces.map { MyClusterItem(it.first.lat, it.first.lng, it.second ?: "") })
             }
 
             myLocations.forEach {
                 addMarker(MarkerOptions().position(it.location).title(it.title))
-                    .setIcon(bitmapDescriptorFromVector(requireContext(),R.drawable.ic_notifications_black_24dp))
+                    .setIcon(
+                        bitmapDescriptorFromVector(
+                            requireContext(),
+                            R.drawable.ic_notifications_black_24dp
+                        )
+                    )
             }
-            moveCamera(CameraUpdateFactory.newLatLngZoom(myLocations.last().location, 12f))
+            addMarker(MarkerOptions().position(centerLocation.location).title(centerLocation.title))
+                .setIcon(
+                    bitmapDescriptorFromVector(
+                        requireContext(),
+                        R.drawable.ic_notifications_black_24dp
+                    )
+                )
+
+            moveCamera(CameraUpdateFactory.newLatLngZoom(centerLocation.location, 10f))
         }
     }
 
@@ -104,7 +116,10 @@ class MapsFragment : Fragment() {
         context: Context,
         @DrawableRes vectorDrawableResourceId: Int
     ): BitmapDescriptor? {
-        val background = ContextCompat.getDrawable(context, R.drawable.common_google_signin_btn_icon_light_normal_background)
+        val background = ContextCompat.getDrawable(
+            context,
+            R.drawable.common_google_signin_btn_icon_light_normal_background
+        )
         background!!.setBounds(0, 0, background.intrinsicWidth, background.intrinsicHeight)
         val vectorDrawable = ContextCompat.getDrawable(context, vectorDrawableResourceId)
         vectorDrawable!!.setBounds(
@@ -137,6 +152,14 @@ class MapsFragment : Fragment() {
 
         zoomOut.setOnClickListener {
             googleMap?.moveCamera(CameraUpdateFactory.zoomOut())
+        }
+    }
+
+    companion object {
+        private const val MAP_DATA_KEY = "my_boolean"
+
+        fun newInstance(mapData: MapData?) = MapsFragment().apply {
+            arguments = bundleOf(MAP_DATA_KEY to mapData)
         }
     }
 }

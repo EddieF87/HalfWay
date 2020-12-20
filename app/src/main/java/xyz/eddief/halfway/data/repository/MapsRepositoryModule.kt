@@ -14,6 +14,7 @@ object MapsRepositoryModule {
     @Singleton
     @Provides
     fun provideMapsRepository(mapsService: MapsService): MapsRepository {
+//        return MapsRepositoryMock()
         return MapsRepositoryImpl(mapsService)
     }
 }

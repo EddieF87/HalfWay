@@ -1,4 +1,4 @@
-package xyz.eddief.halfway
+package xyz.eddief.halfway.ui.main
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -13,6 +13,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
+import xyz.eddief.halfway.R
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -57,7 +58,8 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
-            ), LOCATION_PERMISSION_REQUEST_CODE)
+            ), LOCATION_PERMISSION_REQUEST_CODE
+            )
             return
         }
         lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let {

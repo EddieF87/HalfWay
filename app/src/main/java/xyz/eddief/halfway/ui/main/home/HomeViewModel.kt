@@ -1,4 +1,4 @@
-package xyz.eddief.halfway.ui.home
+package xyz.eddief.halfway.ui.main.home
 
 import android.location.Location
 import androidx.hilt.Assisted
@@ -23,7 +23,6 @@ class HomeViewModel @ViewModelInject constructor(
     private val mapsRepository: MapsRepository,
     @Assisted private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
 
 
     private val _homeDataState = MutableLiveData<SingleEvent<HomeDataState>>()
@@ -62,10 +61,8 @@ class HomeViewModel @ViewModelInject constructor(
                 _homeDataState.value = SingleEvent(
                     HomeDataState.Ready(
                         MapData(
-                            listOf(
-                                location1, location2, location3,
-                                LocationObject("CENTER", center)
-                            ),
+                            locations = listOf(location1, location2, location3),
+                            centerLocation = LocationObject("CENTER", center),
                             nearbyPlacesResult = getNearbyPlaces(center)
                         )
                     )

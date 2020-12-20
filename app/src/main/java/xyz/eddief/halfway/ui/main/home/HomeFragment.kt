@@ -1,5 +1,6 @@
-package xyz.eddief.halfway.ui.home
+package xyz.eddief.halfway.ui.main.home
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,12 +9,12 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_home.*
 import xyz.eddief.halfway.R
 import xyz.eddief.halfway.data.models.MapData
+import xyz.eddief.halfway.ui.maps.MapsActivity
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -54,8 +55,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun mapNearbyPlaces(mapData: MapData) {
-        val action = HomeFragmentDirections.actionNavigationHomeToNavigationMaps(mapData)
-        findNavController().navigate(action)
+        val mapsIntent = Intent(requireActivity(), MapsActivity::class.java)
+        val b = Bundle()
+        b.putParcelable("mapData", mapData)
+        mapsIntent.putExtras(b)
+        startActivity(mapsIntent)
     }
 
     private fun displayError(error: String?) {

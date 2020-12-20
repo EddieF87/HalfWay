@@ -5,6 +5,7 @@ plugins {
     id 'androidx.navigation.safeargs.kotlin'
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
+    id 'com.google.gms.google-services'
 }
 
 Properties secureProperties = new Properties()
@@ -23,13 +24,20 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "MAPS_API_KEY", secureProperties['MAPS_API_KEY'])
-        resValue "string", "maps_api_key", secureProperties['MAPS_API_KEY']
+        buildConfigField("String", "MAPS_API_KEY", secureProperties['MAPS_API_KEY_DEBUG'])
+        resValue "string", "maps_api_key", secureProperties['MAPS_API_KEY_DEBUG']
+        resValue "string", "facebook_app_id", secureProperties['FACEBOOK_APP_ID']
+        resValue "string", "facebook_protocol_scheme", secureProperties['FACEBOOK_PROTOCOL_SCHEME']
     }
 
     buildTypes {
         debug {
             applicationIdSuffix ".debug"
+
+            buildConfigField("String", "MAPS_API_KEY", secureProperties['MAPS_API_KEY_DEBUG'])
+            resValue "string", "maps_api_key", secureProperties['MAPS_API_KEY_DEBUG']
+            resValue "string", "facebook_app_id", secureProperties['FACEBOOK_APP_ID']
+            resValue "string", "facebook_protocol_scheme", secureProperties['FACEBOOK_PROTOCOL_SCHEME']
         }
         release {
             minifyEnabled false
@@ -59,6 +67,11 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation "com.squareup.okhttp3:okhttp:4.9.0"
     implementation("com.google.guava:guava:30.0-android")
+
+    implementation platform('com.google.firebase:firebase-bom:26.2.0')
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.facebook.android:facebook-android-sdk:[5,6)'
+    implementation 'com.google.android.gms:play-services-auth:19.0.0'
 
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.2'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.2'

@@ -1,4 +1,4 @@
-package xyz.eddief.halfway.ui.home
+package xyz.eddief.halfway.ui.main.home
 
 import xyz.eddief.halfway.data.models.MapData
 
