@@ -24,10 +24,10 @@ interface MapsService {
     @GET("place/nearbysearch/json")
     fun getNearbyPlaces(
         @Query("location") location: String,
-        @Query("rankby") radius: String,
+        @Query("rankby") rankBy: String,
         @Query("type") type: String,
-        @Query("key") key: String,
-        @Query("open_now") openNow: String
-    ): Call<NearbyPlacesResult?>
+        @Query("open_now") openNow: String,
+        @Query("key") key: String
+    ): Call<NearbyPlacesResult>
 
 }

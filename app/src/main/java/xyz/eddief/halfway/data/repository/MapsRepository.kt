@@ -10,7 +10,12 @@ import javax.inject.Inject
 
 
 interface MapsRepository {
-    suspend fun getNearbyPlaces(location: String, radius: String): NearbyPlacesResult?
+    suspend fun getNearbyPlaces(
+        location: String,
+        placeType: String,
+        openNow: Boolean
+    ): NearbyPlacesResult
+
     suspend fun getGeocode(latLng: String): GeoCode?
     suspend fun getDistance(units: String, origins: String, destinations: String): DistanceResult?
 }
@@ -18,13 +23,17 @@ interface MapsRepository {
 class MapsRepositoryImpl @Inject constructor(private val mapsService: MapsService) :
     MapsRepository {
 
-    override suspend fun getNearbyPlaces(location: String, radius: String): NearbyPlacesResult? =
+    override suspend fun getNearbyPlaces(
+        location: String,
+        placeType: String,
+        openNow: Boolean
+    ): NearbyPlacesResult =
         mapsService.getNearbyPlaces(
-            location,
-            "distance",
-            "restaurant",
-            MAPS_API_KEY,
-            true.toString()
+            location = location,
+            rankBy = "distance",
+            type = placeType,
+            openNow = openNow.toString(),
+            key = MAPS_API_KEY
         ).await()
 
 

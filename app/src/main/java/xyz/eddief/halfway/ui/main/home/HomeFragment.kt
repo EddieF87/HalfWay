@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -36,22 +36,38 @@ class HomeFragment : Fragment() {
             }
         })
 
-        val textView: TextView = view.findViewById(R.id.text_home)
-        textView.setOnClickListener { homeViewModel.coordinate() }
+        homeViewModel.placeType.observe(viewLifecycleOwner, {
+            syncPlaceType(it)
+        })
+
+        homeSubmit.setOnClickListener { homeViewModel.coordinate() }
+        homePlacesType.setOnClickListener { createDialog() }
+        homeOpenNowCheckBox.setOnCheckedChangeListener { _, isChecked ->
+            homeViewModel.openNowChecked = isChecked
+        }
     }
 
-    private fun syncMapDataState(homeDataState: HomeDataState) {
-        when(homeDataState) {
-            is HomeDataState.Ready -> {
-                displayLoading(false)
-                mapNearbyPlaces(homeDataState.mapData)
-            }
-            is HomeDataState.Error -> {
-                displayLoading(false)
-                displayError(homeDataState.error)
-            }
-            HomeDataState.Loading -> displayLoading(true)
+    override fun onResume() {
+        super.onResume()
+        homeProfileMe.setProfile(true, "Address Text\nAddress Text\nAddress Text")
+        homeProfileOther1.setProfile(false, "Enter Address")
+        homeProfileOther2.setProfile(false, "Enter Address")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        displayLoading(false)
+    }
+
+    private fun syncMapDataState(homeDataState: HomeDataState) = when (homeDataState) {
+        is HomeDataState.Ready -> {
+            mapNearbyPlaces(homeDataState.mapData)
         }
+        is HomeDataState.Error -> {
+            displayLoading(false)
+            displayError(homeDataState.error)
+        }
+        HomeDataState.Loading -> displayLoading(true)
     }
 
     private fun mapNearbyPlaces(mapData: MapData) {
@@ -68,6 +84,26 @@ class HomeFragment : Fragment() {
 
     private fun displayLoading(inProgress: Boolean) {
         homeLoader.isVisible = inProgress
-        text_home.isVisible = !inProgress
+        homeContent.isVisible = !inProgress
+    }
+
+    private fun syncPlaceType(type: String) {
+        val index = resources.getStringArray(R.array.place_types_values).indexOf(type)
+        homePlacesType.text = resources.getStringArray(R.array.place_types_labels)[index]
+    }
+
+
+    private fun createDialog() {
+        AlertDialog.Builder(requireActivity())
+            .setTitle(R.string.home_place_type_label)
+            .setItems(
+                R.array.place_types_labels
+            ) { _, index ->
+                homeViewModel.updatePlaceType(
+                    resources.getStringArray(R.array.place_types_values)[index]
+                )
+            }
+            .create()
+            .show()
     }
 }

@@ -18,6 +18,7 @@ import xyz.eddief.halfway.data.models.NearbyPlacesResult
 import xyz.eddief.halfway.data.models.SingleEvent
 import xyz.eddief.halfway.data.repository.MapsRepository
 import xyz.eddief.halfway.utils.dLog
+import xyz.eddief.halfway.utils.toPlaceValue
 
 class HomeViewModel @ViewModelInject constructor(
     private val mapsRepository: MapsRepository,
@@ -29,10 +30,15 @@ class HomeViewModel @ViewModelInject constructor(
     val homeDataState: LiveData<SingleEvent<HomeDataState>>
         get() = _homeDataState
 
+    private val _placeType = MutableLiveData("")
+    val placeType: LiveData<String>
+        get() = _placeType
+
+    var openNowChecked = true
+
     private val location1 = TestUtils.TEST_LOC_1
     private val location2 = TestUtils.TEST_LOC_2
     private val location3 = TestUtils.TEST_LOC_3
-    var center: LatLng = LatLng(0.0, 0.0)
 
     fun coordinate() {
         val latLngBounds = LatLngBounds.builder()
@@ -41,7 +47,7 @@ class HomeViewModel @ViewModelInject constructor(
             .include(location3.location)
             .build()
 
-        center = latLngBounds.center
+        val center = latLngBounds.center
 
         val arr = FloatArray(1)
         Location.distanceBetween(
@@ -76,14 +82,11 @@ class HomeViewModel @ViewModelInject constructor(
 
     private suspend fun getNearbyPlaces(location: LatLng): NearbyPlacesResult =
         withContext(Dispatchers.IO) {
-            val response = mapsRepository.getNearbyPlaces(
-                "${location.latitude}, ${location.longitude}",
-                TestUtils.TEST_RADIUS
-            )!!
-            response.results.forEach {
-                dLog("place = ${it.name}   ${it.types}  ${it.opening_hours?.open_now}")
-            }
-            response
+            mapsRepository.getNearbyPlaces(
+                location = location.toPlaceValue(),
+                placeType = placeType.value ?: "",
+                openNow = openNowChecked
+            )
         }
 
     fun fetchPlace(placeId: String) {
@@ -94,5 +97,9 @@ class HomeViewModel @ViewModelInject constructor(
             Place.Field.ADDRESS
         )
         FetchPlaceRequest.builder("", placeFields)
+    }
+
+    fun updatePlaceType(type: String) {
+        _placeType.value = type
     }
 }

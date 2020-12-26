@@ -8,9 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.facebook.login.LoginManager
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.firebase.ui.auth.AuthUI
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_settings.*
 import xyz.eddief.halfway.R
@@ -40,8 +38,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun signOut() {
-        Firebase.auth.signOut()
-        LoginManager.getInstance().logOut()
+        AuthUI.getInstance().signOut(requireContext())
         startActivity(Intent(requireActivity(), LandingActivity::class.java))
         requireActivity().finish()
     }

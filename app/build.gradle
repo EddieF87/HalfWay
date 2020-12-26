@@ -26,8 +26,8 @@ android {
 
         buildConfigField("String", "MAPS_API_KEY", secureProperties['MAPS_API_KEY_DEBUG'])
         resValue "string", "maps_api_key", secureProperties['MAPS_API_KEY_DEBUG']
-        resValue "string", "facebook_app_id", secureProperties['FACEBOOK_APP_ID']
-        resValue "string", "facebook_protocol_scheme", secureProperties['FACEBOOK_PROTOCOL_SCHEME']
+        resValue "string", "facebook_application_id", secureProperties['FACEBOOK_APP_ID']
+        resValue "string", "facebook_login_protocol_scheme", secureProperties['FACEBOOK_PROTOCOL_SCHEME']
     }
 
     buildTypes {
@@ -36,8 +36,8 @@ android {
 
             buildConfigField("String", "MAPS_API_KEY", secureProperties['MAPS_API_KEY_DEBUG'])
             resValue "string", "maps_api_key", secureProperties['MAPS_API_KEY_DEBUG']
-            resValue "string", "facebook_app_id", secureProperties['FACEBOOK_APP_ID']
-            resValue "string", "facebook_protocol_scheme", secureProperties['FACEBOOK_PROTOCOL_SCHEME']
+            resValue "string", "facebook_application_id", secureProperties['FACEBOOK_APP_ID']
+            resValue "string", "facebook_login_protocol_scheme", secureProperties['FACEBOOK_PROTOCOL_SCHEME']
         }
         release {
             minifyEnabled false
@@ -70,8 +70,8 @@ dependencies {
 
     implementation platform('com.google.firebase:firebase-bom:26.2.0')
     implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.facebook.android:facebook-android-sdk:[5,6)'
-    implementation 'com.google.android.gms:play-services-auth:19.0.0'
+    implementation 'com.firebaseui:firebase-ui-auth:5.0.0'
+    implementation 'com.facebook.android:facebook-login:5.15.3'
 
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.2'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.2'

@@ -1,6 +1,8 @@
 package xyz.eddief.halfway.utils
 
+import android.content.Context
 import android.util.Log
+import com.google.android.gms.maps.model.LatLng
 
 fun dLog(log: String, tag: String = DEBUG_TAG) {
     val maxLogSize = 1000
@@ -10,4 +12,16 @@ fun dLog(log: String, tag: String = DEBUG_TAG) {
         end = if (end > log.length) log.length else end
         Log.d(tag, log.substring(start, end))
     }
+}
+
+fun LatLng.toPlaceValue() : String = "$latitude, $longitude"
+
+fun Float.toPX(context: Context): Int {
+    val scale: Float = context.resources.displayMetrics.density
+    return (this * scale + 0.5f).toInt()
+}
+
+fun Float.toDP(context: Context): Int {
+    val scale: Float = context.resources.displayMetrics.density
+    return (this / scale + 0.5f).toInt()
 }
