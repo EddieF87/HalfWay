@@ -2,6 +2,7 @@ package xyz.eddief.halfway.utils
 
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.maps.model.LatLng
 
 fun dLog(log: String, tag: String = DEBUG_TAG) {
@@ -24,4 +25,8 @@ fun Float.toPX(context: Context): Int {
 fun Float.toDP(context: Context): Int {
     val scale: Float = context.resources.displayMetrics.density
     return (this / scale + 0.5f).toInt()
+}
+
+fun <T> MutableLiveData<T>.notifyObserver() {
+    this.value = this.value
 }

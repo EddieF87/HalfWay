@@ -1,5 +1,6 @@
 package xyz.eddief.halfway.ui.main.home
 
+import android.location.Geocoder
 import android.location.Location
 import androidx.hilt.Assisted
 import androidx.hilt.lifecycle.ViewModelInject
@@ -11,7 +12,6 @@ import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import xyz.eddief.halfway.data.TestUtils
 import xyz.eddief.halfway.data.models.LocationObject
 import xyz.eddief.halfway.data.models.MapData
 import xyz.eddief.halfway.data.models.NearbyPlacesResult
@@ -25,7 +25,6 @@ class HomeViewModel @ViewModelInject constructor(
     @Assisted private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-
     private val _homeDataState = MutableLiveData<SingleEvent<HomeDataState>>()
     val homeDataState: LiveData<SingleEvent<HomeDataState>>
         get() = _homeDataState
@@ -34,29 +33,31 @@ class HomeViewModel @ViewModelInject constructor(
     val placeType: LiveData<String>
         get() = _placeType
 
+    private val _readyToSubmit = MutableLiveData(false)
+    val readyToSubmit: LiveData<Boolean>
+        get() = _readyToSubmit
+
+    private val _locationsAmount = MutableLiveData<Int>()
+    val locationsAmount: LiveData<Int>
+        get() = _locationsAmount
+
     var openNowChecked = true
 
-    private val location1 = TestUtils.TEST_LOC_1
-    private val location2 = TestUtils.TEST_LOC_2
-    private val location3 = TestUtils.TEST_LOC_3
+    private var locationMine: LocationObject? = null
+    private var locationOther1: LocationObject? = null
+    private var locationOther2: LocationObject? = null
+    private val listOfLocations get() = listOfNotNull(locationMine, locationOther1, locationOther2)
 
     fun coordinate() {
         val latLngBounds = LatLngBounds.builder()
-            .include(location1.location)
-            .include(location2.location)
-            .include(location3.location)
+            .also { builder ->
+                listOfLocations.forEach {
+                    builder.include(it.location)
+                }
+            }
             .build()
 
         val center = latLngBounds.center
-
-        val arr = FloatArray(1)
-        Location.distanceBetween(
-            location1.location.latitude,
-            location1.location.longitude,
-            location2.location.latitude,
-            location2.location.longitude,
-            arr
-        )
         fetchNearbyPlaces(center)
     }
 
@@ -67,7 +68,7 @@ class HomeViewModel @ViewModelInject constructor(
                 _homeDataState.value = SingleEvent(
                     HomeDataState.Ready(
                         MapData(
-                            locations = listOf(location1, location2, location3),
+                            locations = listOfNotNull(locationMine, locationOther1, locationOther2),
                             centerLocation = LocationObject("CENTER", center),
                             nearbyPlacesResult = getNearbyPlaces(center)
                         )
@@ -89,7 +90,36 @@ class HomeViewModel @ViewModelInject constructor(
             )
         }
 
-    fun fetchPlace(placeId: String) {
+    fun updateLocations(geocoder: Geocoder, latLng: LatLng, profile: LocationProfile) {
+        when (profile) {
+            LocationProfile.ME -> locationMine = LocationObject("MINE", latLng)
+            LocationProfile.OTHER_1 -> locationOther1 = LocationObject("OTHER 1", latLng)
+            LocationProfile.OTHER_2 -> locationOther2 = LocationObject("OTHER 2", latLng)
+        }
+        _locationsAmount.value = listOfLocations.size
+
+        try {
+            val address: String = geocoder.getFromLocation(
+                latLng.latitude,
+                latLng.longitude,
+                1
+            )[0].getAddressLine(0)
+
+            _homeDataState.value = SingleEvent(
+                HomeDataState.UpdateLocation(profile, address)
+            )
+        } catch (e: Exception) {
+            _homeDataState.value = SingleEvent(HomeDataState.Error(e.message))
+        }
+    }
+
+    fun updatePlaceType(type: String) {
+        _placeType.value = type
+    }
+
+
+    //TODO: Unused functions - need to either implement or remove
+    private fun fetchPlace(placeId: String) {
         val placeFields: List<Place.Field> = listOf(
             Place.Field.ID,
             Place.Field.NAME,
@@ -99,7 +129,19 @@ class HomeViewModel @ViewModelInject constructor(
         FetchPlaceRequest.builder("", placeFields)
     }
 
-    fun updatePlaceType(type: String) {
-        _placeType.value = type
+    private fun getDistanceBetween(location1: LatLng, location2: LatLng): Float {
+        val arr = FloatArray(1)
+        Location.distanceBetween(
+            location1.latitude,
+            location1.longitude,
+            location2.latitude,
+            location2.longitude,
+            arr
+        )
+        return arr[0]
     }
+}
+
+enum class LocationProfile {
+    ME, OTHER_1, OTHER_2
 }

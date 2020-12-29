@@ -9,6 +9,7 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import com.google.android.material.card.MaterialCardView
 import xyz.eddief.halfway.R
 import xyz.eddief.halfway.utils.toPX
@@ -58,10 +59,21 @@ class HomeProfileView @JvmOverloads constructor(
         )
     }
 
-    fun setProfile(isSet: Boolean, addressText: String) {
+    fun setProfile(isSet: Boolean, addressText: String?) {
+        setProfileImage(isSet)
+        addressText?.let {
+            addressView.text = it
+        }
+    }
+
+    fun test(locationsAmount: Int, amount: Int) {
+        isVisible = locationsAmount > amount
+        setProfileImage(locationsAmount > amount + 1)
+    }
+
+    fun setProfileImage(isSet: Boolean) {
         imageView.setImageResource(
             if (isSet) R.drawable.ic_person_24 else R.drawable.ic_person_add_24
         )
-        addressView.text = addressText
     }
 }
