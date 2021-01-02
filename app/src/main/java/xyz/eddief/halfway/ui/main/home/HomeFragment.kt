@@ -1,7 +1,6 @@
 package xyz.eddief.halfway.ui.main.home
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
@@ -22,6 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_home.*
 import xyz.eddief.halfway.R
 import xyz.eddief.halfway.data.models.MapData
+import xyz.eddief.halfway.data.models.UserWithLocations
 import xyz.eddief.halfway.ui.location.ChooseLocationActivity
 import xyz.eddief.halfway.ui.maps.MapsActivity
 import java.util.*
@@ -44,20 +44,19 @@ class HomeFragment : Fragment() {
         homeViewModel.homeDataState.observe(
             viewLifecycleOwner,
             { it.get()?.let { state -> syncMapDataState(state) } })
-
         homeViewModel.placeType.observe(viewLifecycleOwner, { syncPlaceType(it) })
-        homeViewModel.locationsAmount.observe(viewLifecycleOwner, { syncProfileStates(it) })
+        homeViewModel.allLocationProfiles.observe(
+            viewLifecycleOwner,
+            { syncUsersWithLocations(it) })
 
         homeSubmit.setOnClickListener { homeViewModel.coordinate() }
         homePlacesType.setOnClickListener { createPlaceTypesDialog() }
-        homeProfileMe.setOnClickListener { goToChooseLocation(LOCATION_REQUEST_KEY_PROFILE_ME) }
-        homeProfileOther1.setOnClickListener { goToChooseLocation(LOCATION_REQUEST_KEY_PROFILE_1) }
-        homeProfileOther2.setOnClickListener { goToChooseLocation(LOCATION_REQUEST_KEY_PROFILE_2) }
+        homeProfileMe.setOnClickListener { updateLocationDialog() }
+        homeProfileOther1.setOnClickListener { goToChooseLocation(LocationProfile.OTHER_1) }
+        homeProfileOther2.setOnClickListener { goToChooseLocation(LocationProfile.OTHER_2) }
         homeOpenNowCheckBox.setOnCheckedChangeListener { _, isChecked ->
             homeViewModel.openNowChecked = isChecked
         }
-
-        getUserLocation()
     }
 
     override fun onStop() {
@@ -65,38 +64,15 @@ class HomeFragment : Fragment() {
         displayLoading(false)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
-            when (requestCode) {
-                LOCATION_REQUEST_KEY_PROFILE_ME -> updateLocation(LocationProfile.ME, data)
-                LOCATION_REQUEST_KEY_PROFILE_1 -> updateLocation(LocationProfile.OTHER_1, data)
-                LOCATION_REQUEST_KEY_PROFILE_2 -> updateLocation(LocationProfile.OTHER_2, data)
-            }
-        }
-    }
-
-    private fun updateLocation(profile: LocationProfile, data: Intent?) {
-        (data?.extras?.get(LOCATION_ADDRESS_KEY) as? LatLng)?.let { updateLocation(profile, it) }
-    }
-
-    private fun updateLocation(profile: LocationProfile, latLng: LatLng) {
+    private fun updateLocation(profile: LocationProfile, latLng: LatLng) =
         homeViewModel.updateLocations(
             Geocoder(requireContext(), Locale.getDefault()),
-            latLng,
-            profile
+            profile,
+            latLng
         )
-    }
-
-    private fun updateProfileAddress(profile: LocationProfile, address: String) = when (profile) {
-        LocationProfile.ME -> homeProfileMe
-        LocationProfile.OTHER_1 -> homeProfileOther1
-        LocationProfile.OTHER_2 -> homeProfileOther2
-    }.setProfile(true, address)
 
     private fun syncMapDataState(state: HomeDataState) = when (state) {
         is HomeDataState.Ready -> goToMapNearbyPlaces(state.mapData)
-        is HomeDataState.UpdateLocation -> updateProfileAddress(state.profile, state.address)
         is HomeDataState.Error -> {
             displayLoading(false)
             displayError(state.error)
@@ -104,11 +80,47 @@ class HomeFragment : Fragment() {
         HomeDataState.Loading -> displayLoading(true)
     }
 
-    private fun syncProfileStates(locationsAmount: Int) {
-        homeSubmit.isEnabled = locationsAmount > 1
-        homeProfileMe.test(locationsAmount, -1)
-        homeProfileOther1.test(locationsAmount, 0)
-        homeProfileOther2.test(locationsAmount, 1)
+    private fun syncUsersWithLocations(usersPair: Pair<UserWithLocations?, List<UserWithLocations>>) {
+        val userProfile: UserWithLocations? = usersPair.first
+        if (userProfile == null) {
+            //TODO GO TO LOGIN/ACCOUNT SET UP
+            displayError("TODO: userProfile == null")
+            return
+        }
+        val otherProfiles: List<UserWithLocations> = usersPair.second
+        val otherProfile1 = otherProfiles.getOrNull(0)
+        val otherProfile2 = otherProfiles.getOrNull(1)
+        val userHasLocation = userProfile.hasLocation
+
+        homeProfileMe.setProfile(userProfile)
+        homeProfileOther1.apply {
+            isVisible = otherProfile1 != null || userHasLocation
+            setProfile(otherProfile1)
+        }
+        homeProfileOther2.apply {
+            isVisible = otherProfile2 != null || otherProfile1?.hasLocation == true
+            setProfile(otherProfile2)
+        }
+
+        homeSubmit.isEnabled = userHasLocation && otherProfiles.any { it.hasLocation }
+
+        homeProfileLineMe.setLine(userProfile)
+        homeProfileLineOther1.setLine(otherProfile1)
+        homeProfileLineOther2.setLine(otherProfile2)
+    }
+
+    private fun syncPlaceType(type: String) {
+        val index = resources.getStringArray(R.array.place_types_values).indexOf(type)
+        homePlacesType.text = resources.getStringArray(R.array.place_types_labels)[index]
+    }
+
+    private fun displayError(error: String?) {
+        Snackbar.make(requireView(), "$error", Snackbar.LENGTH_LONG).show()
+    }
+
+    private fun displayLoading(inProgress: Boolean) {
+        homeLoader.isVisible = inProgress
+        homeContent.isVisible = !inProgress
     }
 
     private fun goToMapNearbyPlaces(mapData: MapData) {
@@ -119,24 +131,11 @@ class HomeFragment : Fragment() {
         startActivity(mapsIntent)
     }
 
-    private fun goToChooseLocation(requestCode: Int) = startActivityForResult(
-        Intent(requireActivity(), ChooseLocationActivity::class.java),
-        requestCode
+    private fun goToChooseLocation(profile: LocationProfile) = startActivity(
+        Intent(requireActivity(), ChooseLocationActivity::class.java).apply {
+            putExtra(ChooseLocationActivity.PROFILE_KEY, profile)
+        }
     )
-
-    private fun displayError(error: String?) {
-        Snackbar.make(requireView(), "Error: $error", Snackbar.LENGTH_LONG).show()
-    }
-
-    private fun displayLoading(inProgress: Boolean) {
-        homeLoader.isVisible = inProgress
-        homeContent.isVisible = !inProgress
-    }
-
-    private fun syncPlaceType(type: String) {
-        val index = resources.getStringArray(R.array.place_types_values).indexOf(type)
-        homePlacesType.text = resources.getStringArray(R.array.place_types_labels)[index]
-    }
 
     private fun createPlaceTypesDialog() = AlertDialog.Builder(requireActivity())
         .setTitle(R.string.home_place_type_label)
@@ -150,8 +149,21 @@ class HomeFragment : Fragment() {
         .create()
         .show()
 
+    private fun updateLocationDialog() = AlertDialog.Builder(requireActivity())
+        .setTitle(R.string.home_update_dialog_title)
+        .setPositiveButton(R.string.home_update_dialog_positive) { _, _ ->
+            goToChooseLocation(
+                LocationProfile.ME
+            )
+        }
+        .setNegativeButton(R.string.home_update_dialog_negative) { _, _ -> getUserLocation() }
+        .setNeutralButton(R.string.dialog_cancel) { _, _ -> }
+        .create()
+        .show()
+
     private fun getUserLocation() {
-        val lm = activity?.getSystemService(AppCompatActivity.LOCATION_SERVICE) as LocationManager
+        val lm =
+            requireActivity().getSystemService(AppCompatActivity.LOCATION_SERVICE) as LocationManager
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -160,15 +172,15 @@ class HomeFragment : Fragment() {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(
-                requireActivity(), arrayOf(
+            requestPermissions(
+                arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ), LOCATION_PERMISSION_REQUEST_CODE
             )
             return
         }
-        lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let {
+        lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)?.let {
             updateLocation(LocationProfile.ME, LatLng(it.latitude, it.longitude))
         }
     }
@@ -180,34 +192,16 @@ class HomeFragment : Fragment() {
     ) {
         when (requestCode) {
             LOCATION_PERMISSION_REQUEST_CODE -> {
-                // If request is cancelled, the result arrays are empty.
-                if ((grantResults.isNotEmpty() &&
-                            grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                ) {
+                if ((grantResults.getOrNull(0) == PackageManager.PERMISSION_GRANTED)) {
                     getUserLocation()
                 } else {
-                    // Explain to the user that the feature is unavailable because
-                    // the features requires a permission that the user has denied.
-                    // At the same time, respect the user's decision. Don't link to
-                    // system settings in an effort to convince the user to change
-                    // their decision.
+                    displayError(getString(R.string.location_permission_denied_error))
                 }
-                return
-            }
-
-            // Add other 'when' lines to check for other
-            // permissions this app might request.
-            else -> {
-                // Ignore all other requests.
             }
         }
     }
 
     companion object {
-        const val LOCATION_REQUEST_KEY_PROFILE_ME = 300
-        const val LOCATION_REQUEST_KEY_PROFILE_1 = 301
-        const val LOCATION_REQUEST_KEY_PROFILE_2 = 302
-        const val LOCATION_ADDRESS_KEY = "address"
         const val LOCATION_PERMISSION_REQUEST_CODE = 429
         const val MAPS_DATA_KEY = "mapData"
     }

@@ -1,6 +1,7 @@
 package xyz.eddief.halfway.ui.main.home
 
 import android.content.Context
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
@@ -9,9 +10,9 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import com.google.android.material.card.MaterialCardView
 import xyz.eddief.halfway.R
+import xyz.eddief.halfway.data.models.UserWithLocations
 import xyz.eddief.halfway.utils.toPX
 
 class HomeProfileView @JvmOverloads constructor(
@@ -21,6 +22,7 @@ class HomeProfileView @JvmOverloads constructor(
 ) : MaterialCardView(context, attrs, defStyleAttr) {
 
     private val imageView = AppCompatImageView(context)
+    private val nameView = AppCompatTextView(context)
     private val addressView = AppCompatTextView(context)
 
     init {
@@ -43,6 +45,17 @@ class HomeProfileView @JvmOverloads constructor(
                     )
                 )
                 addView(
+                    nameView.apply {
+                        setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10f)
+                        setTypeface(typeface, Typeface.BOLD)
+                        setTextColor(ContextCompat.getColor(context, R.color.colorAccent))
+                    },
+                    LinearLayoutCompat.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                )
+                addView(
                     addressView.apply {
                         setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10f)
                     },
@@ -59,21 +72,15 @@ class HomeProfileView @JvmOverloads constructor(
         )
     }
 
-    fun setProfile(isSet: Boolean, addressText: String?) {
-        setProfileImage(isSet)
-        addressText?.let {
+    fun setProfile(userWithLocations: UserWithLocations?) = userWithLocations?.let { profile ->
+        nameView.text = profile.user.fullName
+        profile.currentLocation?.address?.let {
             addressView.text = it
-        }
-    }
+            setProfileImage(true)
+        } ?: setProfileImage(false)
+    } ?: setProfileImage(false)
 
-    fun test(locationsAmount: Int, amount: Int) {
-        isVisible = locationsAmount > amount
-        setProfileImage(locationsAmount > amount + 1)
-    }
-
-    fun setProfileImage(isSet: Boolean) {
-        imageView.setImageResource(
-            if (isSet) R.drawable.ic_person_24 else R.drawable.ic_person_add_24
-        )
-    }
+    private fun setProfileImage(isSet: Boolean) = imageView.setImageResource(
+        if (isSet) R.drawable.ic_person_24 else R.drawable.ic_person_add_24
+    )
 }

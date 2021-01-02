@@ -92,7 +92,7 @@ class MapsFragment : Fragment() {
             }
 
             myLocations.forEach {
-                addMarker(MarkerOptions().position(it.location).title(it.title))
+                addMarker(MarkerOptions().position(it.latLng).title(it.title))
                     .setIcon(
                         bitmapDescriptorFromVector(
                             requireContext(),
@@ -100,7 +100,7 @@ class MapsFragment : Fragment() {
                         )
                     )
             }
-            addMarker(MarkerOptions().position(centerLocation.location).title(centerLocation.title))
+            addMarker(MarkerOptions().position(centerLocation.latLng).title(centerLocation.title))
                 .setIcon(
                     bitmapDescriptorFromVector(
                         requireContext(),
@@ -108,7 +108,7 @@ class MapsFragment : Fragment() {
                     )
                 )
 
-            moveCamera(CameraUpdateFactory.newLatLngZoom(centerLocation.location, 10f))
+            moveCamera(CameraUpdateFactory.newLatLngZoom(centerLocation.latLng, 10f))
         }
     }
 

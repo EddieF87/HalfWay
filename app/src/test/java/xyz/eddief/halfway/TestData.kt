@@ -1,3 +1,5 @@
+package xyz.eddief.halfway
+
 val placesJson1 = """
 {
   "html_attributions": [],

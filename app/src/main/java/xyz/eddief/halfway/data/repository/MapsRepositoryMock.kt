@@ -15,7 +15,7 @@ class MapsRepositoryMock : MapsRepository {
         return Gson().fromJson(placesJson1, NearbyPlacesResult::class.java)
     }
 
-    override suspend fun getGeocode(latLng: String): GeoCode? {
+    override suspend fun getGeocode(latLng: String): GeoCode {
         return GeoCode(
             results = listOf(
                 GeoCode.Result(
@@ -40,7 +40,7 @@ class MapsRepositoryMock : MapsRepository {
         units: String,
         origins: String,
         destinations: String
-    ): DistanceResult? {
+    ): DistanceResult {
         return DistanceResult(
             destination_addresses = listOf(),
             origin_addresses = listOf(),

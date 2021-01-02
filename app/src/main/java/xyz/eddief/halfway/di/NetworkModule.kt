@@ -1,4 +1,4 @@
-package xyz.eddief.halfway.data.service
+package xyz.eddief.halfway.di
 
 import android.app.Application
 import dagger.Module
@@ -11,6 +11,7 @@ import okhttp3.Request
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import xyz.eddief.halfway.BuildConfig
+import xyz.eddief.halfway.data.service.MapsService
 import xyz.eddief.halfway.utils.SignatureManager
 import xyz.eddief.halfway.utils.dLog
 import java.util.concurrent.TimeUnit

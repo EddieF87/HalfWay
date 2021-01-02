@@ -94,12 +94,39 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/rightGuideline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent=".75" />
+        <xyz.eddief.halfway.ui.main.home.HomeLineView
+            android:id="@+id/homeProfileLineMe"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/margin_half_x"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/homeProfileMe"
+            app:layout_constraintEnd_toEndOf="@id/rightProfilesCenterGuideline"
+            app:layout_constraintStart_toStartOf="@id/submitCenterGuideline"
+            app:layout_constraintTop_toBottomOf="@id/homeSubmit" />
+
+        <xyz.eddief.halfway.ui.main.home.HomeLineView
+            android:id="@+id/homeProfileLineOther1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="@dimen/margin_half_x"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/homeSubmit"
+            app:layout_constraintEnd_toEndOf="@id/submitCenterGuideline"
+            app:layout_constraintStart_toStartOf="@id/leftProfilesCenterGuideline"
+            app:layout_constraintTop_toBottomOf="@id/homeProfileOther1" />
+
+        <xyz.eddief.halfway.ui.main.home.HomeLineView
+            android:id="@+id/homeProfileLineOther2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="@dimen/margin_half_x"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/submitCenterGuideline"
+            app:layout_constraintEnd_toEndOf="@id/rightProfilesCenterGuideline"
+            app:layout_constraintStart_toEndOf="@id/homeSubmit"
+            app:layout_constraintTop_toBottomOf="@id/homeProfileOther2"
+            app:reverseLine="true" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/leftGuideline"
@@ -107,6 +134,36 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layout_constraintGuide_percent=".25" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/rightGuideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent=".75" />
+
+        <View
+            android:id="@+id/submitCenterGuideline"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            app:layout_constraintBottom_toBottomOf="@id/homeSubmit"
+            app:layout_constraintEnd_toEndOf="@id/homeSubmit"
+            app:layout_constraintStart_toStartOf="@id/homeSubmit"
+            app:layout_constraintTop_toTopOf="@id/homeSubmit" />
+
+        <View
+            android:id="@+id/leftProfilesCenterGuideline"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            app:layout_constraintEnd_toEndOf="@id/homeProfileOther1"
+            app:layout_constraintStart_toStartOf="@id/homeProfileOther1" />
+
+        <View
+            android:id="@+id/rightProfilesCenterGuideline"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            app:layout_constraintEnd_toEndOf="@id/homeProfileMe"
+            app:layout_constraintStart_toStartOf="@id/homeProfileMe" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ProgressBar

@@ -29,33 +29,12 @@
         android:id="@+id/landingSignIn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Login"
+        android:text="@string/landing_primary"
         android:textSize="24dp"
         android:layout_margin="@dimen/margin_2x"
         android:padding="@dimen/margin_2x"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
-
-<!--    <com.google.android.gms.common.SignInButton-->
-<!--        android:id="@+id/landingGoogleLogin"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginBottom="@dimen/margin_4x"-->
-<!--        android:alpha="0"-->
-<!--        app:layout_constraintBottom_toTopOf="@id/landingFacebookLogin"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent" />-->
-
-<!--    <com.facebook.login.widget.LoginButton-->
-<!--        android:id="@+id/landingFacebookLogin"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_gravity="center_horizontal"-->
-<!--        android:layout_marginBottom="@dimen/margin_4x"-->
-<!--        android:alpha="0"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,19 +1,22 @@
 package xyz.eddief.halfway
 
 import com.google.gson.Gson
-import placesJson1
 import xyz.eddief.halfway.data.models.DistanceResult
 import xyz.eddief.halfway.data.models.GeoCode
 import xyz.eddief.halfway.data.models.NearbyPlacesResult
 import xyz.eddief.halfway.data.repository.MapsRepository
 
-class MapsRepositoryMock : MapsRepository {
+class FakeMapsRepository : MapsRepository {
 
-    override suspend fun getNearbyPlaces(location: String, radius: String): NearbyPlacesResult? {
-        return  Gson().fromJson(placesJson1, NearbyPlacesResult::class.java)
+    override suspend fun getNearbyPlaces(
+        location: String,
+        placeType: String,
+        openNow: Boolean
+    ): NearbyPlacesResult {
+        return Gson().fromJson(placesJson1, NearbyPlacesResult::class.java)
     }
 
-    override suspend fun getGeocode(latLng: String): GeoCode? {
+    override suspend fun getGeocode(latLng: String): GeoCode {
         return GeoCode(
             results = listOf(
                 GeoCode.Result(
@@ -38,7 +41,7 @@ class MapsRepositoryMock : MapsRepository {
         units: String,
         origins: String,
         destinations: String
-    ): DistanceResult? {
+    ): DistanceResult {
         return DistanceResult(
             destination_addresses = listOf(),
             origin_addresses = listOf(),

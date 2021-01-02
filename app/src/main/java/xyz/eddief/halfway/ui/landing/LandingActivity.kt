@@ -3,6 +3,7 @@ package xyz.eddief.halfway.ui.landing
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.firebase.ui.auth.AuthUI
@@ -18,15 +19,22 @@ import xyz.eddief.halfway.utils.dLog
 @AndroidEntryPoint
 class LandingActivity : AppCompatActivity() {
 
+    private val landingViewModel: LandingViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_landing)
         landingSignIn.setOnClickListener { launchSignInFlow() }
+        landingViewModel.done.observe(this) {
+            if(it == true) {
+                goToMainPage()
+            }
+        }
     }
 
     public override fun onStart() {
         super.onStart()
-        goToMainPage()
+        landingViewModel.setUserId("xe123")
         return
         setLoading(true)
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -35,7 +43,7 @@ class LandingActivity : AppCompatActivity() {
 
     private fun updateUI(currentUser: FirebaseUser?) {
         if (currentUser != null) {
-            goToMainPage()
+            landingViewModel.setUserId(currentUser.uid)
         } else {
             setLoading(false)
         }
@@ -53,7 +61,6 @@ class LandingActivity : AppCompatActivity() {
     }
 
     private fun launchSignInFlow() {
-
         val providers = arrayListOf(
             AuthUI.IdpConfig.GoogleBuilder().build(),
             AuthUI.IdpConfig.FacebookBuilder().build()

@@ -12,16 +12,16 @@ import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import xyz.eddief.halfway.data.models.LocationObject
-import xyz.eddief.halfway.data.models.MapData
-import xyz.eddief.halfway.data.models.NearbyPlacesResult
-import xyz.eddief.halfway.data.models.SingleEvent
+import xyz.eddief.halfway.data.models.*
 import xyz.eddief.halfway.data.repository.MapsRepository
+import xyz.eddief.halfway.data.repository.UserRepository
+import xyz.eddief.halfway.utils.LocationUtils
 import xyz.eddief.halfway.utils.dLog
 import xyz.eddief.halfway.utils.toPlaceValue
 
 class HomeViewModel @ViewModelInject constructor(
     private val mapsRepository: MapsRepository,
+    private val userRepository: UserRepository,
     @Assisted private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -33,32 +33,34 @@ class HomeViewModel @ViewModelInject constructor(
     val placeType: LiveData<String>
         get() = _placeType
 
-    private val _readyToSubmit = MutableLiveData(false)
-    val readyToSubmit: LiveData<Boolean>
-        get() = _readyToSubmit
+    private val otherLocationProfiles: LiveData<List<UserWithLocations>> =
+        userRepository.observeOthersWithLocations()
 
-    private val _locationsAmount = MutableLiveData<Int>()
-    val locationsAmount: LiveData<Int>
-        get() = _locationsAmount
+    private val myLocationProfile: LiveData<UserWithLocations?> =
+        userRepository.observeUserWithLocations()
+
+    var allLocationProfiles =
+        ZipLiveData(myLocationProfile, otherLocationProfiles) { myProfile, otherProfiles ->
+            Pair(myProfile, otherProfiles ?: emptyList())
+        }
 
     var openNowChecked = true
 
-    private var locationMine: LocationObject? = null
-    private var locationOther1: LocationObject? = null
-    private var locationOther2: LocationObject? = null
-    private val listOfLocations get() = listOfNotNull(locationMine, locationOther1, locationOther2)
+    private val listOfLocations: List<LocationObject>
+        get() = listOfNotNull(
+            listOfNotNull(myLocationProfile.value?.currentLocation),
+            otherLocationProfiles.value?.map { it.currentLocation }
+        ).flatten().filterNotNull()
 
     fun coordinate() {
         val latLngBounds = LatLngBounds.builder()
             .also { builder ->
                 listOfLocations.forEach {
-                    builder.include(it.location)
+                    builder.include(it.latLng)
                 }
             }
             .build()
-
-        val center = latLngBounds.center
-        fetchNearbyPlaces(center)
+        fetchNearbyPlaces(latLngBounds.center)
     }
 
     private fun fetchNearbyPlaces(center: LatLng) {
@@ -68,8 +70,13 @@ class HomeViewModel @ViewModelInject constructor(
                 _homeDataState.value = SingleEvent(
                     HomeDataState.Ready(
                         MapData(
-                            locations = listOfNotNull(locationMine, locationOther1, locationOther2),
-                            centerLocation = LocationObject("CENTER", center),
+                            locations = listOfLocations,
+                            centerLocation = LocationObject(
+                                "99",
+                                "CENTER",
+                                center.latitude,
+                                center.longitude
+                            ),
                             nearbyPlacesResult = getNearbyPlaces(center)
                         )
                     )
@@ -90,26 +97,10 @@ class HomeViewModel @ViewModelInject constructor(
             )
         }
 
-    fun updateLocations(geocoder: Geocoder, latLng: LatLng, profile: LocationProfile) {
-        when (profile) {
-            LocationProfile.ME -> locationMine = LocationObject("MINE", latLng)
-            LocationProfile.OTHER_1 -> locationOther1 = LocationObject("OTHER 1", latLng)
-            LocationProfile.OTHER_2 -> locationOther2 = LocationObject("OTHER 2", latLng)
-        }
-        _locationsAmount.value = listOfLocations.size
-
-        try {
-            val address: String = geocoder.getFromLocation(
-                latLng.latitude,
-                latLng.longitude,
-                1
-            )[0].getAddressLine(0)
-
-            _homeDataState.value = SingleEvent(
-                HomeDataState.UpdateLocation(profile, address)
-            )
-        } catch (e: Exception) {
-            _homeDataState.value = SingleEvent(HomeDataState.Error(e.message))
+    fun updateLocations(geoCoder: Geocoder, profile: LocationProfile, latLng: LatLng) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val location = LocationUtils.createLocationObjectFromLatLng(geoCoder, latLng)
+            userRepository.updateLocationFromProfile(profile, location)
         }
     }
 
