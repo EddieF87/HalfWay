@@ -9,18 +9,38 @@ import xyz.eddief.halfway.data.models.UserWithLocations
 import xyz.eddief.halfway.ui.main.home.LocationProfile
 import javax.inject.Inject
 
-class UserRepository @Inject constructor(private val appDatabase: AppDatabase) {
+//interface UserRepository {
+//    suspend fun updateUserLocation(location: LocationObject)
+//}
+
+
+interface UserRepository {
+    suspend fun updateUserLocation(location: LocationObject)
+    suspend fun updateOtherLocation(userId: String, location: LocationObject)
+    suspend fun updateLocationFromProfile(profile: LocationProfile, location: LocationObject)
+    fun observeUserWithLocations(): LiveData<UserWithLocations?>
+    fun observeOthersWithLocations(): LiveData<List<UserWithLocations>>
+    suspend fun getUserWithLocations(userId: String): UserWithLocations
+    suspend fun updateUserId(id: String)
+}
+
+class UserRepositoryImpl @Inject constructor(private val appDatabase: AppDatabase) :
+    UserRepository {
 
     private var userId = ""
     private val otherId1 get() = "${userId}_OTHER1"
     private val otherId2 get() = "${userId}_OTHER2"
 
-    suspend fun updateUserLocation(location: LocationObject) = updateLocation(userId, location)
-
-    suspend fun updateOtherLocation(userId: String, location: LocationObject) =
+    override suspend fun updateUserLocation(location: LocationObject) =
         updateLocation(userId, location)
 
-    suspend fun updateLocationFromProfile(profile: LocationProfile, location: LocationObject) =
+    override suspend fun updateOtherLocation(userId: String, location: LocationObject) =
+        updateLocation(userId, location)
+
+    override suspend fun updateLocationFromProfile(
+        profile: LocationProfile,
+        location: LocationObject
+    ) =
         updateLocation(
             when (profile) {
                 LocationProfile.ME -> userId
@@ -36,16 +56,16 @@ class UserRepository @Inject constructor(private val appDatabase: AppDatabase) {
         }
     }
 
-    fun observeUserWithLocations(): LiveData<UserWithLocations?> =
+    override fun observeUserWithLocations(): LiveData<UserWithLocations?> =
         appDatabase.userDao().observeUserWithLocations(userId)
 
-    fun observeOthersWithLocations(): LiveData<List<UserWithLocations>> =
+    override fun observeOthersWithLocations(): LiveData<List<UserWithLocations>> =
         appDatabase.userDao().observeOthersWithLocations(otherId1, otherId2)
 
-    suspend fun getUserWithLocations(userId: String): UserWithLocations =
+    override suspend fun getUserWithLocations(userId: String): UserWithLocations =
         appDatabase.userDao().getUserWithLocations(userId)
 
-    suspend fun updateUserId(id: String) {
+    override suspend fun updateUserId(id: String) {
         userId = id
         appDatabase.userDao().insertAll(
             User(userId, "testEd", "FOy", "email.com", ""),

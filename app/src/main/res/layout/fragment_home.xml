@@ -30,6 +30,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/homeCenterAddress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_1x"
+            android:textColor="@color/quantum_grey600"
+            android:textSize="10dp"
+            app:layout_constraintBottom_toBottomOf="@id/homeSubmit"
+            app:layout_constraintEnd_toStartOf="@id/homeSubmit"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="@id/leftProfilesCenterGuideline"
+            app:layout_constraintTop_toTopOf="@id/homeSubmit"
+            app:layout_constraintVertical_bias="0.33"
+            app:layout_constraintWidth_default="wrap" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

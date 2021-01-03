@@ -1,16 +1,17 @@
-package xyz.eddief.halfway
+package xyz.eddief.halfway.data.repository
 
 import com.google.gson.Gson
 import xyz.eddief.halfway.data.models.DistanceResult
 import xyz.eddief.halfway.data.models.GeoCode
 import xyz.eddief.halfway.data.models.NearbyPlacesResult
-import xyz.eddief.halfway.data.repository.MapsRepository
+import xyz.eddief.halfway.placesJson1
 
 class FakeMapsRepository : MapsRepository {
 
-    override suspend fun getNearbyPlaces(
+    override suspend fun getNearbyPlacesByType(
         location: String,
-        placeType: String,
+        placeToMeet: String,
+        isKeyword: Boolean,
         openNow: Boolean
     ): NearbyPlacesResult {
         return Gson().fromJson(placesJson1, NearbyPlacesResult::class.java)

@@ -21,11 +21,30 @@ interface MapsService {
     @GET("geocode/json")
     fun getGeocode(@Query("latlng") latLng: String, @Query("key") key: String): Call<GeoCode?>
 
+//    @GET("place/nearbysearch/json")
+//    fun getNearbyPlacesRanked(
+//        @Query("location") location: String,
+//        @Query("rankby") rankBy: String,
+//        @Query("type") type: String,
+//        @Query("open_now") openNow: String,
+//        @Query("key") key: String
+//    ): Call<NearbyPlacesResult>
+//
+//    @GET("place/nearbysearch/json")
+//    fun getNearbyPlacesInRadius(
+//        @Query("location") location: String,
+//        @Query("radius") radius: String,
+//        @Query("type") type: String,
+//        @Query("key") key: String
+//    ): Call<NearbyPlacesResult>
+
     @GET("place/nearbysearch/json")
-    fun getNearbyPlaces(
+    fun getNearbyPlacesByKeyword(
         @Query("location") location: String,
-        @Query("rankby") rankBy: String,
-        @Query("type") type: String,
+        @Query("radius") radius: String? = null,
+        @Query("rankby") rankBy: String? = null,
+        @Query("keyword") keyword: String? = null,
+        @Query("type") type: String? = null,
         @Query("open_now") openNow: String,
         @Query("key") key: String
     ): Call<NearbyPlacesResult>

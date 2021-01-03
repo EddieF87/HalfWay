@@ -1,6 +1,5 @@
 package xyz.eddief.halfway.ui.main.home
 
-import android.location.Geocoder
 import android.location.Location
 import androidx.hilt.Assisted
 import androidx.hilt.lifecycle.ViewModelInject
@@ -15,13 +14,14 @@ import kotlinx.coroutines.withContext
 import xyz.eddief.halfway.data.models.*
 import xyz.eddief.halfway.data.repository.MapsRepository
 import xyz.eddief.halfway.data.repository.UserRepository
-import xyz.eddief.halfway.utils.LocationUtils
+import xyz.eddief.halfway.utils.SharedPreferencesController
 import xyz.eddief.halfway.utils.dLog
 import xyz.eddief.halfway.utils.toPlaceValue
 
 class HomeViewModel @ViewModelInject constructor(
     private val mapsRepository: MapsRepository,
     private val userRepository: UserRepository,
+    private val sharedPreferences: SharedPreferencesController,
     @Assisted private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -29,9 +29,9 @@ class HomeViewModel @ViewModelInject constructor(
     val homeDataState: LiveData<SingleEvent<HomeDataState>>
         get() = _homeDataState
 
-    private val _placeType = MutableLiveData("")
-    val placeType: LiveData<String>
-        get() = _placeType
+    private val _placeToMeet = MutableLiveData(sharedPreferences.placeToMeet)
+    val placeToMeet: LiveData<String>
+        get() = _placeToMeet
 
     private val otherLocationProfiles: LiveData<List<UserWithLocations>> =
         userRepository.observeOthersWithLocations()
@@ -39,12 +39,22 @@ class HomeViewModel @ViewModelInject constructor(
     private val myLocationProfile: LiveData<UserWithLocations?> =
         userRepository.observeUserWithLocations()
 
+    private val _centerLatLng = MutableLiveData<LatLng>()
+    val centerLatLng: LiveData<LatLng>
+        get() = _centerLatLng
+
+    var centerLocation: LocationObject? = null
+
     var allLocationProfiles =
         ZipLiveData(myLocationProfile, otherLocationProfiles) { myProfile, otherProfiles ->
+            getCenterLocation(listOfLocations)?.let {
+                _centerLatLng.value = it
+            }
             Pair(myProfile, otherProfiles ?: emptyList())
         }
 
     var openNowChecked = true
+    private val isSearchByKeyword get() = sharedPreferences.isSearchByKeyword
 
     private val listOfLocations: List<LocationObject>
         get() = listOfNotNull(
@@ -52,18 +62,19 @@ class HomeViewModel @ViewModelInject constructor(
             otherLocationProfiles.value?.map { it.currentLocation }
         ).flatten().filterNotNull()
 
-    fun coordinate() {
-        val latLngBounds = LatLngBounds.builder()
-            .also { builder ->
-                listOfLocations.forEach {
-                    builder.include(it.latLng)
+    fun getCenterLocation(locations: List<LocationObject>): LatLng? =
+        locations.takeIf { it.size > 1 }?.let {
+            LatLngBounds.builder()
+                .also { builder ->
+                    it.forEach {
+                        builder.include(it.latLng)
+                    }
                 }
-            }
-            .build()
-        fetchNearbyPlaces(latLngBounds.center)
-    }
+                .build()
+                .center
+        }
 
-    private fun fetchNearbyPlaces(center: LatLng) {
+    fun fetchNearbyPlaces() {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 _homeDataState.value = SingleEvent(HomeDataState.Loading)
@@ -71,13 +82,8 @@ class HomeViewModel @ViewModelInject constructor(
                     HomeDataState.Ready(
                         MapData(
                             locations = listOfLocations,
-                            centerLocation = LocationObject(
-                                "99",
-                                "CENTER",
-                                center.latitude,
-                                center.longitude
-                            ),
-                            nearbyPlacesResult = getNearbyPlaces(center)
+                            centerLocation = centerLocation!!,
+                            nearbyPlacesResult = getNearbyPlaces(centerLocation!!.latLng)
                         )
                     )
                 )
@@ -90,22 +96,24 @@ class HomeViewModel @ViewModelInject constructor(
 
     private suspend fun getNearbyPlaces(location: LatLng): NearbyPlacesResult =
         withContext(Dispatchers.IO) {
-            mapsRepository.getNearbyPlaces(
+            mapsRepository.getNearbyPlacesByType(
                 location = location.toPlaceValue(),
-                placeType = placeType.value ?: "",
+                placeToMeet = placeToMeet.value ?: "",
+                isKeyword = isSearchByKeyword,
                 openNow = openNowChecked
             )
         }
 
-    fun updateLocations(geoCoder: Geocoder, profile: LocationProfile, latLng: LatLng) {
+    fun updateLocation(profile: LocationProfile, location: LocationObject) {
         viewModelScope.launch(Dispatchers.IO) {
-            val location = LocationUtils.createLocationObjectFromLatLng(geoCoder, latLng)
             userRepository.updateLocationFromProfile(profile, location)
         }
     }
 
-    fun updatePlaceType(type: String) {
-        _placeType.value = type
+    fun updatePlaceType(place: String, isKeyword: Boolean) {
+        _placeToMeet.value = place
+        sharedPreferences.placeToMeet = place
+        sharedPreferences.isSearchByKeyword = isKeyword
     }
 
 

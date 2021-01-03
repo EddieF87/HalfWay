@@ -7,9 +7,10 @@ import xyz.eddief.halfway.data.models.NearbyPlacesResult
 
 class MapsRepositoryMock : MapsRepository {
 
-    override suspend fun getNearbyPlaces(
+    override suspend fun getNearbyPlacesByType(
         location: String,
-        placeType: String,
+        placeToMeet: String,
+        isKeyword: Boolean,
         openNow: Boolean
     ): NearbyPlacesResult {
         return Gson().fromJson(placesJson1, NearbyPlacesResult::class.java)

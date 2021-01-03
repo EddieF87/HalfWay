@@ -24,6 +24,7 @@ import xyz.eddief.halfway.data.models.MapData
 import xyz.eddief.halfway.data.models.UserWithLocations
 import xyz.eddief.halfway.ui.location.ChooseLocationActivity
 import xyz.eddief.halfway.ui.maps.MapsActivity
+import xyz.eddief.halfway.utils.LocationUtils
 import java.util.*
 
 
@@ -41,17 +42,18 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        homeViewModel.homeDataState.observe(
-            viewLifecycleOwner,
-            { it.get()?.let { state -> syncMapDataState(state) } })
-        homeViewModel.placeType.observe(viewLifecycleOwner, { syncPlaceType(it) })
-        homeViewModel.allLocationProfiles.observe(
-            viewLifecycleOwner,
-            { syncUsersWithLocations(it) })
+        homeViewModel.apply {
+            allLocationProfiles.observe(viewLifecycleOwner, { syncUsersWithLocations(it) })
+            placeToMeet.observe(viewLifecycleOwner, { syncPlaceType(it) })
+            centerLatLng.observe(viewLifecycleOwner, { syncCenterLocation(it) })
+            homeDataState.observe(
+                viewLifecycleOwner,
+                { it.get()?.let { state -> syncMapDataState(state) } })
+        }
 
-        homeSubmit.setOnClickListener { homeViewModel.coordinate() }
-        homePlacesType.setOnClickListener { createPlaceTypesDialog() }
-        homeProfileMe.setOnClickListener { updateLocationDialog() }
+        homeSubmit.setOnClickListener { homeViewModel.fetchNearbyPlaces() }
+        homePlacesType.setOnClickListener { showCreatePlaceTypesDialog() }
+        homeProfileMe.setOnClickListener { showUpdateLocationDialog() }
         homeProfileOther1.setOnClickListener { goToChooseLocation(LocationProfile.OTHER_1) }
         homeProfileOther2.setOnClickListener { goToChooseLocation(LocationProfile.OTHER_2) }
         homeOpenNowCheckBox.setOnCheckedChangeListener { _, isChecked ->
@@ -65,10 +67,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateLocation(profile: LocationProfile, latLng: LatLng) =
-        homeViewModel.updateLocations(
-            Geocoder(requireContext(), Locale.getDefault()),
+        homeViewModel.updateLocation(
             profile,
-            latLng
+            LocationUtils.createLocationObjectFromLatLng(
+                Geocoder(requireContext(), Locale.getDefault()), latLng
+            )
         )
 
     private fun syncMapDataState(state: HomeDataState) = when (state) {
@@ -114,6 +117,17 @@ class HomeFragment : Fragment() {
         homePlacesType.text = resources.getStringArray(R.array.place_types_labels)[index]
     }
 
+    private fun syncCenterLocation(latLng: LatLng) {
+        with(
+            LocationUtils.createLocationObjectFromLatLng(
+                Geocoder(requireContext(), Locale.getDefault()), latLng
+            )
+        ) {
+            homeViewModel.centerLocation = this
+            homeCenterAddress.text = this.address
+        }
+    }
+
     private fun displayError(error: String?) {
         Snackbar.make(requireView(), "$error", Snackbar.LENGTH_LONG).show()
     }
@@ -137,19 +151,21 @@ class HomeFragment : Fragment() {
         }
     )
 
-    private fun createPlaceTypesDialog() = AlertDialog.Builder(requireActivity())
+    private fun showCreatePlaceTypesDialog() = AlertDialog.Builder(requireActivity())
         .setTitle(R.string.home_place_type_label)
         .setItems(
             R.array.place_types_labels
         ) { _, index ->
             homeViewModel.updatePlaceType(
-                resources.getStringArray(R.array.place_types_values)[index]
+                resources.getStringArray(R.array.place_types_values)[index],
+                false
             )
         }
+        .setPositiveButton("Search") { _, _ ->  }   //TODO implement search in dialog
         .create()
         .show()
 
-    private fun updateLocationDialog() = AlertDialog.Builder(requireActivity())
+    private fun showUpdateLocationDialog() = AlertDialog.Builder(requireActivity())
         .setTitle(R.string.home_update_dialog_title)
         .setPositiveButton(R.string.home_update_dialog_positive) { _, _ ->
             goToChooseLocation(
