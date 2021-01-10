@@ -24,4 +24,8 @@
 
     <string name="settings_logout">Logout</string>
 
+    <string name="dialog_place_to_meet_title">Choose a type of place to meet:</string>
+    <string name="dialog_place_to_meet_or">or enter your own:</string>
+    <string name="dialog_place_to_meet_primary">Submit</string>
+
 </resources>

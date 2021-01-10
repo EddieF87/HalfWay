@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import xyz.eddief.halfway.data.models.*
 import xyz.eddief.halfway.data.repository.MapsRepository
 import xyz.eddief.halfway.data.repository.UserRepository
+import xyz.eddief.halfway.utils.PlaceTypeUtils
 import xyz.eddief.halfway.utils.SharedPreferencesController
 import xyz.eddief.halfway.utils.dLog
 import xyz.eddief.halfway.utils.toPlaceValue
@@ -29,9 +30,18 @@ class HomeViewModel @ViewModelInject constructor(
     val homeDataState: LiveData<SingleEvent<HomeDataState>>
         get() = _homeDataState
 
-    private val _placeToMeet = MutableLiveData(sharedPreferences.placeToMeet)
-    val placeToMeet: LiveData<String>
-        get() = _placeToMeet
+    private val placeToMeet get() = sharedPreferences.placeToMeet
+
+    private val _placeToMeetDisplay = MutableLiveData(
+        if (sharedPreferences.isSearchByKeyword) {
+            placeToMeet
+        } else {
+            PlaceTypeUtils.getPlaceKey(placeToMeet)
+        }
+    )
+
+    val placeToMeetDisplay: LiveData<String>
+        get() = _placeToMeetDisplay
 
     private val otherLocationProfiles: LiveData<List<UserWithLocations>> =
         userRepository.observeOthersWithLocations()
@@ -98,7 +108,7 @@ class HomeViewModel @ViewModelInject constructor(
         withContext(Dispatchers.IO) {
             mapsRepository.getNearbyPlacesByType(
                 location = location.toPlaceValue(),
-                placeToMeet = placeToMeet.value ?: "",
+                placeToMeet = placeToMeetDisplay.value ?: "",
                 isKeyword = isSearchByKeyword,
                 openNow = openNowChecked
             )
@@ -110,10 +120,20 @@ class HomeViewModel @ViewModelInject constructor(
         }
     }
 
-    fun updatePlaceType(place: String, isKeyword: Boolean) {
-        _placeToMeet.value = place
-        sharedPreferences.placeToMeet = place
-        sharedPreferences.isSearchByKeyword = isKeyword
+    fun updatePlaceType(place: String?, isKeyword: Boolean) {
+        place?.let {
+            val placeToMeet = when {
+                isKeyword -> place
+                else -> PlaceTypeUtils.getPlaceType(place)
+            }
+            _placeToMeetDisplay.value = when {
+                isKeyword -> place
+                PlaceTypeUtils.hasPlaceKey(place) -> place
+                else -> "Anywhere"
+            }
+            sharedPreferences.placeToMeet = placeToMeet
+            sharedPreferences.isSearchByKeyword = isKeyword
+        }
     }
 
 

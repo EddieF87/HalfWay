@@ -29,7 +29,7 @@ import java.util.*
 
 
 @AndroidEntryPoint
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(), PlaceToMeetDialogListener {
 
     private val homeViewModel: HomeViewModel by viewModels()
 
@@ -44,7 +44,7 @@ class HomeFragment : Fragment() {
 
         homeViewModel.apply {
             allLocationProfiles.observe(viewLifecycleOwner, { syncUsersWithLocations(it) })
-            placeToMeet.observe(viewLifecycleOwner, { syncPlaceType(it) })
+            placeToMeetDisplay.observe(viewLifecycleOwner, { syncPlaceToMeet(it) })
             centerLatLng.observe(viewLifecycleOwner, { syncCenterLocation(it) })
             homeDataState.observe(
                 viewLifecycleOwner,
@@ -112,9 +112,8 @@ class HomeFragment : Fragment() {
         homeProfileLineOther2.setLine(otherProfile2)
     }
 
-    private fun syncPlaceType(type: String) {
-        val index = resources.getStringArray(R.array.place_types_values).indexOf(type)
-        homePlacesType.text = resources.getStringArray(R.array.place_types_labels)[index]
+    private fun syncPlaceToMeet(type: String) {
+        homePlacesType.text = type
     }
 
     private fun syncCenterLocation(latLng: LatLng) {
@@ -151,19 +150,8 @@ class HomeFragment : Fragment() {
         }
     )
 
-    private fun showCreatePlaceTypesDialog() = AlertDialog.Builder(requireActivity())
-        .setTitle(R.string.home_place_type_label)
-        .setItems(
-            R.array.place_types_labels
-        ) { _, index ->
-            homeViewModel.updatePlaceType(
-                resources.getStringArray(R.array.place_types_values)[index],
-                false
-            )
-        }
-        .setPositiveButton("Search") { _, _ ->  }   //TODO implement search in dialog
-        .create()
-        .show()
+    private fun showCreatePlaceTypesDialog() =
+        HomePlaceToMeetDialog(this).show(parentFragmentManager, "placeToMeet")
 
     private fun showUpdateLocationDialog() = AlertDialog.Builder(requireActivity())
         .setTitle(R.string.home_update_dialog_title)
@@ -216,6 +204,12 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+    override fun onPlaceTypeChosen(placeType: String) =
+        homeViewModel.updatePlaceType(placeType, isKeyword = false)
+
+    override fun onPlaceToMeetEntered(placeToMeet: String) =
+        homeViewModel.updatePlaceType(placeToMeet, isKeyword = true)
 
     companion object {
         const val LOCATION_PERMISSION_REQUEST_CODE = 429

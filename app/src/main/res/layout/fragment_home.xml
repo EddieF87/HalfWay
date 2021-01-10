@@ -23,7 +23,7 @@
             android:background="@drawable/circle_bg"
             android:padding="@dimen/margin_1x"
             android:text="@string/home_submit"
-            android:textSize="20dp"
+            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
@@ -36,14 +36,15 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/margin_1x"
             android:textColor="@color/quantum_grey600"
-            android:textSize="10dp"
+            android:textSize="10sp"
             app:layout_constraintBottom_toBottomOf="@id/homeSubmit"
             app:layout_constraintEnd_toStartOf="@id/homeSubmit"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="@id/leftProfilesCenterGuideline"
             app:layout_constraintTop_toTopOf="@id/homeSubmit"
             app:layout_constraintVertical_bias="0.33"
-            app:layout_constraintWidth_default="wrap" />
+            app:layout_constraintWidth_default="wrap"
+            tools:ignore="SmallSp" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -64,8 +65,7 @@
                 style="@style/MaterialButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/margin_1x"
-                android:text="@string/place_type_anywhere_label" />
+                android:layout_marginBottom="@dimen/margin_1x" />
 
             <com.google.android.material.checkbox.MaterialCheckBox
                 android:id="@+id/homeOpenNowCheckBox"
