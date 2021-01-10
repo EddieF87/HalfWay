@@ -150,8 +150,11 @@ class HomeFragment : Fragment(), PlaceToMeetDialogListener {
         }
     )
 
-    private fun showCreatePlaceTypesDialog() =
-        HomePlaceToMeetDialog(this).show(parentFragmentManager, "placeToMeet")
+    private fun showCreatePlaceTypesDialog() {
+        val dialog = HomePlaceToMeetDialog()
+        dialog.setTargetFragment(this, 49)
+        dialog.show(parentFragmentManager, "placeToMeet")
+    }
 
     private fun showUpdateLocationDialog() = AlertDialog.Builder(requireActivity())
         .setTitle(R.string.home_update_dialog_title)

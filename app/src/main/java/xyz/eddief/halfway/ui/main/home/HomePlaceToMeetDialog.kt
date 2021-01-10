@@ -6,9 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.dialog_home_place_to_meet.view.*
@@ -17,8 +18,10 @@ import xyz.eddief.halfway.R
 import xyz.eddief.halfway.utils.PlaceTypeUtils
 
 
-class HomePlaceToMeetDialog(private val listener: PlaceToMeetDialogListener) :
-    DialogFragment(), PlaceTypesOnClickListener {
+class HomePlaceToMeetDialog :
+    AppCompatDialogFragment(), PlaceTypesOnClickListener {
+
+    private val listener get() = targetFragment as? PlaceToMeetDialogListener
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         super.onCreate(savedInstanceState)
@@ -50,14 +53,20 @@ class HomePlaceToMeetDialog(private val listener: PlaceToMeetDialogListener) :
     }
 
     private fun onPlaceToMeetEntered(placeToMeet: String) {
-        listener.onPlaceToMeetEntered(placeToMeet)
+        listener?.onPlaceToMeetEntered(placeToMeet) ?: displayError()
         dismiss()
     }
 
     override fun onClick(placeType: String) {
-        listener.onPlaceTypeChosen(placeType)
+        listener?.onPlaceTypeChosen(placeType) ?: displayError()
         dismiss()
     }
+
+    private fun displayError() = Toast.makeText(
+        requireContext(),
+        getString(R.string.dialog_place_to_meet_error),
+        Toast.LENGTH_LONG
+    ).show()
 }
 
 interface PlaceToMeetDialogListener {
