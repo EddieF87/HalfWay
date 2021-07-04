@@ -18,11 +18,12 @@ import androidx.fragment.app.viewModels
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_home.*
 import xyz.eddief.halfway.R
 import xyz.eddief.halfway.data.models.MapData
 import xyz.eddief.halfway.data.models.UserWithLocations
+import xyz.eddief.halfway.databinding.FragmentHomeBinding
 import xyz.eddief.halfway.ui.location.ChooseLocationActivity
+import xyz.eddief.halfway.ui.main.home.HomePlaceToMeetDialog.Companion.newInstance
 import xyz.eddief.halfway.ui.maps.MapsActivity
 import xyz.eddief.halfway.utils.LocationUtils
 import java.util.*
@@ -32,12 +33,23 @@ import java.util.*
 class HomeFragment : Fragment(), PlaceToMeetDialogListener {
 
     private val homeViewModel: HomeViewModel by viewModels()
+    private var _binding: FragmentHomeBinding? = null
+    // This property is only valid between onCreateView and onDestroyView.
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_home, container, false)
+    ): View {
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -50,14 +62,15 @@ class HomeFragment : Fragment(), PlaceToMeetDialogListener {
                 viewLifecycleOwner,
                 { it.get()?.let { state -> syncMapDataState(state) } })
         }
-
-        homeSubmit.setOnClickListener { homeViewModel.fetchNearbyPlaces() }
-        homePlacesType.setOnClickListener { showCreatePlaceTypesDialog() }
-        homeProfileMe.setOnClickListener { showUpdateLocationDialog() }
-        homeProfileOther1.setOnClickListener { goToChooseLocation(LocationProfile.OTHER_1) }
-        homeProfileOther2.setOnClickListener { goToChooseLocation(LocationProfile.OTHER_2) }
-        homeOpenNowCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            homeViewModel.openNowChecked = isChecked
+        binding.apply {
+            homeSubmit.setOnClickListener { homeViewModel.fetchNearbyPlaces() }
+            homePlacesType.setOnClickListener { showCreatePlaceTypesDialog() }
+            homeProfileMe.setOnClickListener { showUpdateLocationDialog() }
+            homeProfileOther1.setOnClickListener { goToChooseLocation(LocationProfile.OTHER_1) }
+            homeProfileOther2.setOnClickListener { goToChooseLocation(LocationProfile.OTHER_2) }
+            homeOpenNowCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                homeViewModel.openNowChecked = isChecked
+            }
         }
     }
 
@@ -93,27 +106,27 @@ class HomeFragment : Fragment(), PlaceToMeetDialogListener {
         val otherProfiles: List<UserWithLocations> = usersPair.second
         val otherProfile1 = otherProfiles.getOrNull(0)
         val otherProfile2 = otherProfiles.getOrNull(1)
-        val userHasLocation = userProfile.hasLocation
+        val userHasLocation = userProfile.hasLocation()
 
-        homeProfileMe.setProfile(userProfile)
-        homeProfileOther1.apply {
-            isVisible = otherProfile1 != null || userHasLocation
-            setProfile(otherProfile1)
+        binding.apply {
+            homeProfileMe.setProfile(userProfile)
+            homeProfileOther1.apply {
+                isVisible = otherProfile1 != null || userHasLocation
+                setProfile(otherProfile1)
+            }
+            homeProfileOther2.apply {
+                isVisible = otherProfile2 != null || otherProfile1?.hasLocation() == true
+                setProfile(otherProfile2)
+            }
+            homeSubmit.isEnabled = userHasLocation && otherProfiles.any { it.hasLocation() }
+            homeProfileLineMe.setLine(userProfile)
+            homeProfileLineOther1.setLine(otherProfile1)
+            homeProfileLineOther2.setLine(otherProfile2)
         }
-        homeProfileOther2.apply {
-            isVisible = otherProfile2 != null || otherProfile1?.hasLocation == true
-            setProfile(otherProfile2)
-        }
-
-        homeSubmit.isEnabled = userHasLocation && otherProfiles.any { it.hasLocation }
-
-        homeProfileLineMe.setLine(userProfile)
-        homeProfileLineOther1.setLine(otherProfile1)
-        homeProfileLineOther2.setLine(otherProfile2)
     }
 
     private fun syncPlaceToMeet(type: String) {
-        homePlacesType.text = type
+        binding.homePlacesType.text = type
     }
 
     private fun syncCenterLocation(latLng: LatLng) {
@@ -123,7 +136,7 @@ class HomeFragment : Fragment(), PlaceToMeetDialogListener {
             )
         ) {
             homeViewModel.centerLocation = this
-            homeCenterAddress.text = this.address
+            binding.homeCenterAddress.text = this.address
         }
     }
 
@@ -132,8 +145,8 @@ class HomeFragment : Fragment(), PlaceToMeetDialogListener {
     }
 
     private fun displayLoading(inProgress: Boolean) {
-        homeLoader.isVisible = inProgress
-        homeContent.isVisible = !inProgress
+        binding.homeLoader.isVisible = inProgress
+        binding.homeContent.isVisible = !inProgress
     }
 
     private fun goToMapNearbyPlaces(mapData: MapData) {
@@ -151,13 +164,13 @@ class HomeFragment : Fragment(), PlaceToMeetDialogListener {
     )
 
     private fun showCreatePlaceTypesDialog() {
-        val dialog = HomePlaceToMeetDialog()
-        dialog.setTargetFragment(this, 49)
-        dialog.show(parentFragmentManager, "placeToMeet")
+        HomePlaceToMeetDialog()
+            .newInstance(this)
+            .show(parentFragmentManager, "placeToMeet")
     }
 
     private fun showUpdateLocationDialog() = AlertDialog.Builder(requireActivity())
-        .setTitle(R.string.home_update_dialog_title)
+        .setMessage(R.string.home_update_dialog_title)
         .setPositiveButton(R.string.home_update_dialog_positive) { _, _ ->
             goToChooseLocation(
                 LocationProfile.ME

@@ -1,14 +1,14 @@
 package xyz.eddief.halfway.ui.main.home
 
 import android.location.Location
-import androidx.hilt.Assisted
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xyz.eddief.halfway.data.models.*
@@ -18,12 +18,14 @@ import xyz.eddief.halfway.utils.PlaceTypeUtils
 import xyz.eddief.halfway.utils.SharedPreferencesController
 import xyz.eddief.halfway.utils.dLog
 import xyz.eddief.halfway.utils.toPlaceValue
+import javax.inject.Inject
 
-class HomeViewModel @ViewModelInject constructor(
+@HiltViewModel
+class HomeViewModel @Inject constructor(
     private val mapsRepository: MapsRepository,
     private val userRepository: UserRepository,
     private val sharedPreferences: SharedPreferencesController,
-    @Assisted private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _homeDataState = MutableLiveData<SingleEvent<HomeDataState>>()
@@ -43,41 +45,42 @@ class HomeViewModel @ViewModelInject constructor(
     val placeToMeetDisplay: LiveData<String>
         get() = _placeToMeetDisplay
 
-    private val otherLocationProfiles: LiveData<List<UserWithLocations>> =
-        userRepository.observeOthersWithLocations()
-
-    private val myLocationProfile: LiveData<UserWithLocations?> =
-        userRepository.observeUserWithLocations()
-
     private val _centerLatLng = MutableLiveData<LatLng>()
     val centerLatLng: LiveData<LatLng>
         get() = _centerLatLng
 
     var centerLocation: LocationObject? = null
 
-    var allLocationProfiles =
-        ZipLiveData(myLocationProfile, otherLocationProfiles) { myProfile, otherProfiles ->
-            getCenterLocation(listOfLocations)?.let {
-                _centerLatLng.value = it
+    private var listOfLocations: List<LocationObject> = listOf()
+
+    val allLocationProfiles: LiveData<Pair<UserWithLocations?, List<UserWithLocations>>> =
+        userRepository.allSelectedWithLocationsFlow
+            .onEach { pair ->
+                listOfLocations = mapListOfLocations(pair.first, pair.second)
+                getCenterLocation(listOfLocations)?.let {
+                    _centerLatLng.value = it
+                }
+                dLog("uuuuuuuuuuuuu ${pair.first}  , ${pair.second}")
             }
-            Pair(myProfile, otherProfiles ?: emptyList())
-        }
+            .asLiveData()
 
     var openNowChecked = true
     private val isSearchByKeyword get() = sharedPreferences.isSearchByKeyword
 
-    private val listOfLocations: List<LocationObject>
-        get() = listOfNotNull(
-            listOfNotNull(myLocationProfile.value?.currentLocation),
-            otherLocationProfiles.value?.map { it.currentLocation }
-        ).flatten().filterNotNull()
+    private fun mapListOfLocations(
+        myProfile: UserWithLocations?,
+        otherProfiles: List<UserWithLocations>
+    ) = listOfNotNull(
+        listOfNotNull(myProfile?.currentLocation),
+        otherProfiles.map { it.currentLocation }
+    ).flatten().filterNotNull()
 
     fun getCenterLocation(locations: List<LocationObject>): LatLng? =
         locations.takeIf { it.size > 1 }?.let {
             LatLngBounds.builder()
                 .also { builder ->
                     it.forEach {
-                        builder.include(it.latLng)
+                        builder.include(it.latLng())
                     }
                 }
                 .build()
@@ -93,7 +96,7 @@ class HomeViewModel @ViewModelInject constructor(
                         MapData(
                             locations = listOfLocations,
                             centerLocation = centerLocation!!,
-                            nearbyPlacesResult = getNearbyPlaces(centerLocation!!.latLng)
+                            nearbyPlacesResult = getNearbyPlaces(centerLocation!!.latLng())
                         )
                     )
                 )

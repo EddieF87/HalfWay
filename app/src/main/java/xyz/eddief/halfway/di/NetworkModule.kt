@@ -1,10 +1,11 @@
 package xyz.eddief.halfway.di
 
 import android.app.Application
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ApplicationComponent
+import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -18,13 +19,15 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
-@InstallIn(ApplicationComponent::class)
+@InstallIn(SingletonComponent::class)
 object NetworkModule {
 
     @Singleton
     @Provides
     fun provideMapsService(application: Application): MapsService {
-        val builder: OkHttpClient.Builder = OkHttpClient().newBuilder().also {
+        val builder: OkHttpClient.Builder = OkHttpClient().newBuilder()
+            .addInterceptor(ChuckerInterceptor(application))
+            .also {
             val signature =
                 SignatureManager.getSignature(application.packageManager, application.packageName) ?: ""
             it.readTimeout(10, TimeUnit.SECONDS)

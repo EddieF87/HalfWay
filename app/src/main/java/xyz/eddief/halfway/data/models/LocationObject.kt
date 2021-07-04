@@ -10,19 +10,19 @@ import java.util.*
 @Entity
 @Parcelize
 data class LocationObject(
-    @PrimaryKey val locationId: String,
+    @PrimaryKey val locationId: String = UUID.randomUUID().toString(),
     val title: String = "",
-    var latitude: Double,
-    var longitude: Double,
+    var latitude: Double = 0.0,
+    var longitude: Double = 0.0,
     var address: String = ""
 ) : Parcelable {
 
-    constructor(
-        title: String = "",
-        latitude: Double,
-        longitude: Double,
-        address: String = ""
-    ) : this(UUID.randomUUID().toString(), title, latitude, longitude, address)
+//    constructor(
+//        title: String = "",
+//        latitude: Double,
+//        longitude: Double,
+//        address: String = ""
+//    ) : this(UUID.randomUUID().toString(), title, latitude, longitude, address)
 
-    val latLng get() = LatLng(latitude, longitude)
+    fun latLng() = LatLng(latitude, longitude)
 }

@@ -56,6 +56,6 @@ class HomeLineView @JvmOverloads constructor(
             return
         }
         visibility = VISIBLE
-        paint.color = if (userWithLocations.hasLocation) Color.BLACK else Color.LTGRAY
+        paint.color = if (userWithLocations.hasLocation()) Color.BLACK else Color.LTGRAY
     }
 }

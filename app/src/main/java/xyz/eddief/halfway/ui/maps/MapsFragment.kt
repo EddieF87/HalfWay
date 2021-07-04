@@ -88,11 +88,19 @@ class MapsFragment : Fragment() {
                     false
                 }
 
-                addItems(nearbyPlaces.map { MyClusterItem(it.first.lat, it.first.lng, it.second ?: "") })
+                addItems(nearbyPlaces.map {
+                    MyClusterItem(
+                        it.first.lat,
+                        it.first.lng,
+                        it.second ?: ""
+                    )
+                })
             }
 
             myLocations.forEach {
-                addMarker(MarkerOptions().position(it.latLng).title(it.title))
+                addMarker(
+                    MarkerOptions().position(it.latLng()).title(it.title).snippet("PPPOOOOOOP")
+                )
                     .setIcon(
                         bitmapDescriptorFromVector(
                             requireContext(),
@@ -100,15 +108,18 @@ class MapsFragment : Fragment() {
                         )
                     )
             }
-            addMarker(MarkerOptions().position(centerLocation.latLng).title(centerLocation.title))
+            addMarker(
+                MarkerOptions().position(centerLocation.latLng()).title(centerLocation.title)
+                    .snippet("CENTER")
+            )
                 .setIcon(
                     bitmapDescriptorFromVector(
                         requireContext(),
-                        R.drawable.ic_notifications_black_24dp
+                        R.drawable.ic_baseline_star_24
                     )
                 )
 
-            moveCamera(CameraUpdateFactory.newLatLngZoom(centerLocation.latLng, 10f))
+            moveCamera(CameraUpdateFactory.newLatLngZoom(centerLocation.latLng(), 10f))
         }
     }
 
@@ -119,14 +130,19 @@ class MapsFragment : Fragment() {
         val background = ContextCompat.getDrawable(
             context,
             R.drawable.common_google_signin_btn_icon_light_normal_background
+        )!!
+        val vectorDrawable = ContextCompat.getDrawable(context, vectorDrawableResourceId)!!
+        background.setBounds(
+            0,
+            0,
+            vectorDrawable.intrinsicWidth + (ICON_PADDING * 2),
+            vectorDrawable.intrinsicHeight + (ICON_PADDING * 2)
         )
-        background!!.setBounds(0, 0, background.intrinsicWidth, background.intrinsicHeight)
-        val vectorDrawable = ContextCompat.getDrawable(context, vectorDrawableResourceId)
-        vectorDrawable!!.setBounds(
-            40,
-            20,
-            vectorDrawable.intrinsicWidth + 40,
-            vectorDrawable.intrinsicHeight + 20
+        vectorDrawable.setBounds(
+            ICON_PADDING,
+            ICON_PADDING,
+            vectorDrawable.intrinsicWidth + ICON_PADDING,
+            vectorDrawable.intrinsicHeight + ICON_PADDING
         )
         val bitmap = Bitmap.createBitmap(
             background.intrinsicWidth,
@@ -157,9 +173,11 @@ class MapsFragment : Fragment() {
 
     companion object {
         private const val MAP_DATA_KEY = "my_boolean"
+        private const val ICON_PADDING = 25
 
         fun newInstance(mapData: MapData?) = MapsFragment().apply {
             arguments = bundleOf(MAP_DATA_KEY to mapData)
         }
+
     }
 }

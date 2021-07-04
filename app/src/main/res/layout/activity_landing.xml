@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/landing_primary"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:layout_margin="@dimen/margin_2x"
         android:padding="@dimen/margin_2x"
         app:layout_constraintBottom_toBottomOf="parent"

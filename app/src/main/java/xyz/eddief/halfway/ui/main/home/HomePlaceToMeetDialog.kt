@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.widget.doAfterTextChanged
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.dialog_home_place_to_meet.view.*
@@ -67,6 +68,14 @@ class HomePlaceToMeetDialog :
         getString(R.string.dialog_place_to_meet_error),
         Toast.LENGTH_LONG
     ).show()
+
+
+    companion object {
+
+        fun HomePlaceToMeetDialog.newInstance(target: Fragment) = apply {
+            setTargetFragment(target, 49)
+        }
+    }
 }
 
 interface PlaceToMeetDialogListener {

@@ -2,8 +2,9 @@ package xyz.eddief.halfway.data.models
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.google.firebase.firestore.IgnoreExtraProperties
 
-
+@IgnoreExtraProperties
 data class UserWithLocations(
     @Embedded
     val user: User,
@@ -12,8 +13,7 @@ data class UserWithLocations(
         entityColumn = "locationId",
         entity = LocationObject::class
     )
-    var locations: List<LocationObject> = emptyList()
+    val currentLocation: LocationObject? = null
 ) {
-    val hasLocation: Boolean get() = locations.any()
-    val currentLocation: LocationObject? get() = locations.firstOrNull()
+    fun hasLocation(): Boolean = currentLocation != null
 }

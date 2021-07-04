@@ -3,6 +3,7 @@ package xyz.eddief.halfway.ui.landing
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -21,12 +22,26 @@ class LandingActivity : AppCompatActivity() {
 
     private val landingViewModel: LandingViewModel by viewModels()
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        dLog("wwwwwwwwwwwwwwwwwwww onNewIntent  ${intent?.extras}")
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_landing)
+        val data = intent?.extras
+        val latitude = data?.getString("latitude")?.toDouble()
+        val longitude = data?.getString("longitude")?.toDouble()
+        val title = data?.getString("title")
+        val address = data?.getString("address")
+
+
+        dLog("wwwwwwwwwwwwww  $latitude-$longitude  $address   $title")
+
         landingSignIn.setOnClickListener { launchSignInFlow() }
         landingViewModel.done.observe(this) {
-            if(it == true) {
+            if (it == true) {
                 goToMainPage()
             }
         }
@@ -34,6 +49,7 @@ class LandingActivity : AppCompatActivity() {
 
     public override fun onStart() {
         super.onStart()
+        dLog("wwwwwwwwwwwwwwwwwwww onStart  ${intent?.extras}")
         landingViewModel.setUserId("xe123")
         return
         setLoading(true)
@@ -65,29 +81,22 @@ class LandingActivity : AppCompatActivity() {
             AuthUI.IdpConfig.GoogleBuilder().build(),
             AuthUI.IdpConfig.FacebookBuilder().build()
         )
-
-        startActivityForResult(
-            AuthUI.getInstance()
-                .createSignInIntentBuilder()
-                .setAvailableProviders(providers)
-                .build(),
-            SIGN_IN_RESULT_CODE
-        )
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == SIGN_IN_RESULT_CODE) {
-            val response = IdpResponse.fromResultIntent(data)
-            if (resultCode == Activity.RESULT_OK) {
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val response = IdpResponse.fromResultIntent(result.data)
+            if (result.resultCode == Activity.RESULT_OK) {
                 dLog("Successfully signed in user ${FirebaseAuth.getInstance().currentUser?.displayName}!")
             } else {
                 dLog("Sign in unsuccessful ${response?.error?.errorCode}")
             }
-        }
+        }.launch(
+            AuthUI.getInstance()
+                .createSignInIntentBuilder()
+                .setAvailableProviders(providers)
+                .build()
+        )
     }
 
     companion object {
-        const val SIGN_IN_RESULT_CODE = 4932
+        const val SIGN_IN_REQUEST_CODE = 4932
     }
 }

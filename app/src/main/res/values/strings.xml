@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">HalfWay</string>
+
+    <string name="default_notification_channel_id" translatable="false">halfway notifications</string>
+
     <string name="title_activity_maps">Map</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
@@ -28,5 +31,6 @@
     <string name="dialog_place_to_meet_or">or enter your own:</string>
     <string name="dialog_place_to_meet_primary">Submit</string>
     <string name="dialog_place_to_meet_error">Error: Could not update.</string>
+    <string name="fcm_message">Fcm Message Test</string>
 
 </resources>
